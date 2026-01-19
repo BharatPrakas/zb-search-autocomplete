@@ -30,7 +30,7 @@ export class ZbSearchAutocomplete extends LitElement {
 
   @property({ type: String })
   apiEndpoint = '';
-  
+
   @property({ type: Number })
   debounceDelay = 300;
 
@@ -88,7 +88,7 @@ export class ZbSearchAutocomplete extends LitElement {
         const data = await response.json();
         this.results = data;
       } else {
-
+        // External handler usually sets results via setResults()
       }
     } catch (error) {
       console.error('Search error:', error);
@@ -154,6 +154,7 @@ export class ZbSearchAutocomplete extends LitElement {
    */
   private handleSuggestionClick(suggestion: string, type: string) {
     this.searchQuery = suggestion;
+    this.open = false; // Close on click
     this.dispatchEvent(
       new CustomEvent('suggestion-click', {
         detail: { suggestion, type },
@@ -172,6 +173,31 @@ export class ZbSearchAutocomplete extends LitElement {
   }
 
   /**
+   * Highlight parts of text that match/don't match query.
+   * Logic: Bold parts that capture the "suggestion" (i.e. NOT the typed query).
+   */
+  private highlightMatch(text: string, query: string) {
+    if (!query) return html`${text}`;
+
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    const index = lowerText.indexOf(lowerQuery);
+
+    if (index === -1) {
+      // If query not found, bold everything
+      return html`<span class="highlight-bold">${text}</span>`;
+    }
+
+    const before = text.substring(0, index);
+    const matchStr = text.substring(index, index + query.length);
+    const after = text.substring(index + query.length);
+
+    return html`
+      <span class="highlight-bold">${before}</span>${matchStr}<span class="highlight-bold">${after}</span>
+    `;
+  }
+
+  /**
    * Render text suggestions
    */
   private renderSuggestions() {
@@ -182,15 +208,17 @@ export class ZbSearchAutocomplete extends LitElement {
         <div class="section-label">SUGGESTIONS</div>
         <div class="suggestions-list">
           ${this.results.suggestions.map(
-            (suggestion) => html`
+      (suggestion) => html`
               <div
                 class="suggestion-item"
                 @click=${() => this.handleSuggestionClick(suggestion, 'suggestion')}
               >
-                <span class="suggestion-text">${suggestion}</span>
+                <span class="suggestion-text">
+                  ${this.highlightMatch(suggestion, this.searchQuery)}
+                </span>
               </div>
             `
-          )}
+    )}
         </div>
       </div>
     `;
@@ -205,19 +233,21 @@ export class ZbSearchAutocomplete extends LitElement {
     return html`
       <div class="products-section">
         ${this.results.products.map(
-          (product) => html`
+      (product) => html`
             <a
               href=${product.url || '#'}
               class="product-item"
               @click=${() => this.handleSuggestionClick(product.name, 'product')}
             >
               ${product.image
-                ? html`<img src=${product.image} alt=${product.name} class="product-image" />`
-                : null}
-              <span class="product-name">${product.name}</span>
+          ? html`<img src=${product.image} alt=${product.name} class="product-image" />`
+          : null}
+              <span class="product-name">
+                 ${this.highlightMatch(product.name, this.searchQuery)}
+              </span>
             </a>
           `
-        )}
+    )}
       </div>
     `;
   }
@@ -233,16 +263,18 @@ export class ZbSearchAutocomplete extends LitElement {
         <div class="section-label">PAGES</div>
         <div class="pages-list">
           ${this.results.pages.map(
-            (page) => html`
+      (page) => html`
               <a
                 href=${page.url || '#'}
                 class="page-item"
                 @click=${() => this.handleSuggestionClick(page.name, 'page')}
               >
-                <span class="page-name">${page.name}</span>
+                <span class="page-name">
+                    ${this.highlightMatch(page.name, this.searchQuery)}
+                </span>
               </a>
             `
-          )}
+    )}
         </div>
       </div>
     `;
@@ -285,75 +317,83 @@ export class ZbSearchAutocomplete extends LitElement {
 
   render() {
     return html`
+    <div class="search-overlay">
+    <div class="search-modal">
       <div class="search-container">
         <form @submit=${this.handleSubmit} class="search-form">
-          <div class="search-input-wrapper">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <input
-              type="text"
-              class="search-input"
-              placeholder=${this.placeholder}
-              .value=${this.searchQuery}
-              @input=${this.handleInput}
-              autocomplete="off"
-              spellcheck="false"
-            />
-            ${this.searchQuery
-              ? html`
-                  <button
-                    type="button"
-                    class="clear-button"
-                    @click=${this.handleClear}
-                    aria-label="Clear search"
-                  >
+            <div class="search-input-wrapper">
+              <div class="input-content">
+                  <label class="search-label">${this.placeholder}</label>
+                  <input
+                    type="text"
+                    class="search-input"
+                    .value=${this.searchQuery}
+                    @input=${this.handleInput}
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+              </div>
+              <div class="actions-container">
+                ${this.searchQuery
+        ? html`
+                      <button
+                        type="button"
+                        class="clear-button"
+                        @click=${this.handleClear}
+                        aria-label="Clear search"
+                      >
+                       <!-- Circle with X -->
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                           <circle cx="12" cy="12" r="9" fill="#e0e0e0" /> 
+                           <path d="M15 9L9 15M9 9L15 15" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                    `
+        : null}
+                <div class="search-icon">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        d="M18 6L6 18M6 6L18 18"
+                        <path
+                        d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z"
                         stroke="currentColor"
-                        stroke-width="2"
+                        stroke-width="1.5"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                      />
+                        />
                     </svg>
-                  </button>
-                `
-              : null}
-            <button
-              type="button"
-              class="close-button"
-              @click=${this.handleClose}
-              aria-label="Close search"
-            >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M18 6L6 18M6 6L18 18"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-        </form>
-
-        ${this.open
-          ? html`
-              <div class="dropdown">
-                ${this.renderLoading()} ${this.renderSuggestions()} ${this.renderProducts()}
-                ${this.renderPages()} ${this.renderEmpty()}
+                </div>
               </div>
-            `
-          : null}
+            
+              ${this.open
+        ? html`
+                    <div class="dropdown">
+                      ${this.renderLoading()} ${this.renderSuggestions()} ${this.renderProducts()}
+                      ${this.renderPages()} ${this.renderEmpty()}
+                    </div>
+                  `
+        : null}
+            </div>
+        </form>
+        
+        <button
+          type="button"
+          class="close-button"
+          @click=${this.handleClose}
+          aria-label="Close search"
+        >
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M18 6L6 18M6 6L18 18"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+
       </div>
+    </div>
+    </div>
     `;
   }
 
@@ -362,23 +402,49 @@ export class ZbSearchAutocomplete extends LitElement {
       display: block;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
         sans-serif;
-      --primary-color: #333;
+      --primary-color: #000;
       --border-color: #e0e0e0;
-      --hover-bg: #f5f5f5;
+      --hover-bg: #f8f9fa;
       --text-primary: #333;
       --text-secondary: #666;
       --text-tertiary: #999;
-      --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+  .search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
 
+    .search-modal {
+  width: 100%;
+  background: white;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: slideDown 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
     .search-container {
       position: relative;
-      width: 100%;
+      width: 50%;
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
 
     .search-form {
-      width: 100%;
+      flex: 1;
+      position: relative;
     }
 
     .search-input-wrapper {
@@ -387,154 +453,175 @@ export class ZbSearchAutocomplete extends LitElement {
       align-items: center;
       background: white;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
+      border-radius: 4px; /* Square with slight roundness */
       padding: 0 12px;
+      height: 48px;
+      width: 100%;
       transition: all 0.2s ease;
+      box-sizing: border-box;
     }
 
     .search-input-wrapper:focus-within {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(51, 51, 51, 0.1);
+      border-color: #000;
+    }
+
+    .input-content {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .search-label {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+      margin-bottom: 0px;
+      line-height: 1;
+      padding-top: 4px;
+    }
+
+    .search-input {
+      border: none;
+      outline: none;
+      padding: 0;
+      font-size: 16px;
+      color: var(--text-primary);
+      background: transparent;
+      line-height: 20px;
+      height: 24px;
+    }
+
+    .actions-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .search-icon {
       width: 20px;
       height: 20px;
-      color: var(--text-tertiary);
+      color: var(--text-secondary);
       flex-shrink: 0;
+      cursor: pointer;
     }
 
-    .search-input {
-      flex: 1;
-      border: none;
-      outline: none;
-      padding: 12px 12px;
-      font-size: 14px;
-      color: var(--text-primary);
-      background: transparent;
-    }
-
-    .search-input::placeholder {
-      color: var(--text-tertiary);
-    }
-
-    .clear-button,
-    .close-button {
+    .clear-button {
       background: none;
       border: none;
-      padding: 4px;
+      padding: 0;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-tertiary);
+      color: #999;
       transition: color 0.2s ease;
       flex-shrink: 0;
     }
 
-    .clear-button:hover,
-    .close-button:hover {
-      color: var(--text-primary);
+    .clear-button svg {
+      width: 16px;
+      height: 16px;
     }
 
-    .clear-button svg,
+    .clear-button:hover {
+      color: var(--text-secondary);
+    }
+
+    /* Outer close button */
+    .close-button {
+      background: none;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      transition: color 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .close-button:hover {
+      color: var(--primary-color);
+    }
+
     .close-button svg {
-      width: 18px;
-      height: 18px;
+      width: 24px;
+      height: 24px;
     }
 
     .dropdown {
       position: absolute;
-      top: calc(100% + 8px);
+      top: 100%;
       left: 0;
       right: 0;
       background: white;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
-      box-shadow: var(--shadow-lg);
+      border-top: none; 
+      margin-top: -1px;
+      border-radius: 0 0 4px 4px;
+      box-shadow: var(--shadow);
       max-height: 400px;
       overflow-y: auto;
       z-index: 1000;
-      animation: slideDown 0.2s ease;
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
 
     .section-label {
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 10px;
+      font-weight: 700;
       color: var(--text-tertiary);
-      letter-spacing: 0.5px;
-      padding: 12px 16px 8px;
+      letter-spacing: 1px;
+      padding: 16px 16px 8px;
       text-transform: uppercase;
     }
 
-    .suggestions-section,
-    .products-section,
-    .pages-section {
-      border-bottom: 1px solid var(--border-color);
+    .suggestions-list {
+      padding: 0;
     }
 
-    .suggestions-section:last-child,
-    .products-section:last-child,
-    .pages-section:last-child {
-      border-bottom: none;
-    }
-
-    .suggestions-list,
-    .pages-list {
-      padding: 0 8px 8px;
-    }
-
-    .suggestion-item,
-    .page-item {
+    .suggestion-item {
       display: block;
-      padding: 10px 12px;
+      padding: 10px 16px;
       cursor: pointer;
-      border-radius: 4px;
-      transition: background-color 0.15s ease;
+      background-color: white;
       text-decoration: none;
       color: var(--text-primary);
     }
 
-    .suggestion-item:hover,
-    .page-item:hover {
+    .suggestion-item:hover {
       background-color: var(--hover-bg);
     }
 
-    .suggestion-text,
-    .page-name {
+    .suggestion-text {
       font-size: 14px;
       display: block;
+      line-height: 1.4;
+    }
+    
+    .highlight-bold {
+      font-weight: 700;
     }
 
-    .products-section {
-      padding: 8px;
+    .products-section, .pages-section {
+      padding: 8px 0;
+      border-top: 1px solid var(--border-color);
     }
 
-    .product-item {
+    .product-item, .page-item {
+      padding: 8px 16px;
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 12px;
       cursor: pointer;
-      border-radius: 4px;
-      transition: background-color 0.15s ease;
       text-decoration: none;
       color: var(--text-primary);
     }
-
-    .product-item:hover {
-      background-color: var(--hover-bg);
+    
+    .product-item:hover, .page-item:hover {
+        background-color: var(--hover-bg);
     }
 
     .product-image {
@@ -545,9 +632,10 @@ export class ZbSearchAutocomplete extends LitElement {
       flex-shrink: 0;
     }
 
-    .product-name {
+    .product-name, .page-name {
       font-size: 14px;
       font-weight: 500;
+      display: block;
     }
 
     .loading-container {
@@ -583,7 +671,7 @@ export class ZbSearchAutocomplete extends LitElement {
 
     /* Scrollbar styling */
     .dropdown::-webkit-scrollbar {
-      width: 8px;
+      width: 6px;
     }
 
     .dropdown::-webkit-scrollbar-track {
@@ -591,12 +679,8 @@ export class ZbSearchAutocomplete extends LitElement {
     }
 
     .dropdown::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 4px;
-    }
-
-    .dropdown::-webkit-scrollbar-thumb:hover {
-      background: var(--text-tertiary);
+      background: #eee;
+      border-radius: 3px;
     }
   `;
 }
