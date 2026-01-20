@@ -1,9 +1,9 @@
-import { LitElement, css, html } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { LitElement, css, html } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 
 export interface SearchSuggestion {
   text: string;
-  type: 'suggestion' | 'product' | 'page';
+  type: "suggestion" | "product" | "page";
 }
 
 export interface ProductSuggestion {
@@ -23,13 +23,13 @@ export interface SearchResults {
   pages?: PageSuggestion[];
 }
 
-@customElement('zb-search-autocomplete')
+@customElement("zb-search-autocomplete")
 export class ZbSearchAutocomplete extends LitElement {
   @property({ type: String })
-  placeholder = 'Search';
+  placeholder = "Search";
 
   @property({ type: String })
-  apiEndpoint = '';
+  apiEndpoint = "";
 
   @property({ type: Number })
   debounceDelay = 300;
@@ -38,7 +38,7 @@ export class ZbSearchAutocomplete extends LitElement {
   open = false;
 
   @state()
-  private searchQuery = '';
+  private searchQuery = "";
 
   @state()
   private results: SearchResults = {};
@@ -56,13 +56,14 @@ export class ZbSearchAutocomplete extends LitElement {
       clearTimeout(this.debounceTimer);
     }
 
-    this.dispatchEvent(
-      new CustomEvent('search-input', {
-        detail: { query: this.searchQuery },
-        bubbles: true,
-        composed: true,
-      })
-    );
+    // Dispatch moved to performSearch for debouncing
+    // this.dispatchEvent(
+    //   new CustomEvent('search-input', {
+    //     detail: { query: this.searchQuery },
+    //     bubbles: true,
+    //     composed: true,
+    //   })
+    // );
 
     if (this.searchQuery.trim()) {
       this.open = true;
@@ -75,27 +76,55 @@ export class ZbSearchAutocomplete extends LitElement {
     }
   }
 
-  private async performSearch() {
+  private performSearch() {
     if (!this.searchQuery.trim()) return;
 
     this.loading = true;
 
-    try {
-      if (this.apiEndpoint) {
-        const response = await fetch(
-          `${this.apiEndpoint}?q=${encodeURIComponent(this.searchQuery)}`
-        );
-        const data = await response.json();
-        this.results = data;
-      } else {
-        // External handler usually sets results via setResults()
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      this.results = {};
-    } finally {
-      this.loading = false;
-    }
+    // Dispatch search event to host
+    this.dispatchEvent(
+      new CustomEvent("search-input", {
+        detail: { query: this.searchQuery },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  override connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener(
+      "zb-search-response",
+      this.handleSearchResponse.bind(this) as EventListener
+    );
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener(
+      "zb-search-response",
+      this.handleSearchResponse.bind(this) as EventListener
+    );
+  }
+
+  private handleSearchResponse(e: CustomEvent) {
+    const data = e.detail?.data;
+    console.log("event", e);
+    console.log("data", data);
+    if (!data) return;
+
+    // Optional: Check if response query matches current query to avoid race conditions
+    // But user might want to see results anyway.
+
+    // Map incoming data to component state
+    this.results = {
+      suggestions: data.suggestions?.map((s: any) => s.name) || [],
+      products: data.products || [],
+      // Handle view_all_url if needed, or other fields
+    };
+
+    this.loading = false;
+    this.open = true;
   }
 
   /**
@@ -112,7 +141,7 @@ export class ZbSearchAutocomplete extends LitElement {
   private handleSubmit(e: Event) {
     e.preventDefault();
     this.dispatchEvent(
-      new CustomEvent('search-submit', {
+      new CustomEvent("search-submit", {
         detail: { query: this.searchQuery },
         bubbles: true,
         composed: true,
@@ -124,11 +153,11 @@ export class ZbSearchAutocomplete extends LitElement {
    * Clear search
    */
   private handleClear() {
-    this.searchQuery = '';
+    this.searchQuery = "";
     this.results = {};
     this.open = false;
     this.dispatchEvent(
-      new CustomEvent('search-clear', {
+      new CustomEvent("search-clear", {
         bubbles: true,
         composed: true,
       })
@@ -142,7 +171,7 @@ export class ZbSearchAutocomplete extends LitElement {
   private handleClose() {
     this.open = false;
     this.dispatchEvent(
-      new CustomEvent('search-close', {
+      new CustomEvent("search-close", {
         bubbles: true,
         composed: true,
       })
@@ -156,7 +185,7 @@ export class ZbSearchAutocomplete extends LitElement {
     this.searchQuery = suggestion;
     this.open = false; // Close on click
     this.dispatchEvent(
-      new CustomEvent('suggestion-click', {
+      new CustomEvent("suggestion-click", {
         detail: { suggestion, type },
         bubbles: true,
         composed: true,
@@ -168,7 +197,7 @@ export class ZbSearchAutocomplete extends LitElement {
    * Focus the search input
    */
   private focusInput() {
-    const input = this.shadowRoot?.querySelector('input');
+    const input = this.shadowRoot?.querySelector("input");
     input?.focus();
   }
 
@@ -184,8 +213,7 @@ export class ZbSearchAutocomplete extends LitElement {
     const index = lowerText.indexOf(lowerQuery);
 
     if (index === -1) {
-      // If query not found, bold everything
-      return html`<span class="highlight-bold">${text}</span>`;
+      return html`<span>${text}</span>`;
     }
 
     const before = text.substring(0, index);
@@ -193,7 +221,7 @@ export class ZbSearchAutocomplete extends LitElement {
     const after = text.substring(index + query.length);
 
     return html`
-      <span class="highlight-bold">${before}</span>${matchStr}<span class="highlight-bold">${after}</span>
+      <span>${before}</span><span class="highlight-bold">${matchStr}</span><span>${after}</span>
     `;
   }
 
@@ -208,17 +236,18 @@ export class ZbSearchAutocomplete extends LitElement {
         <div class="section-label">SUGGESTIONS</div>
         <div class="suggestions-list">
           ${this.results.suggestions.map(
-      (suggestion) => html`
+            (suggestion) => html`
               <div
                 class="suggestion-item"
-                @click=${() => this.handleSuggestionClick(suggestion, 'suggestion')}
+                @click=${() =>
+                  this.handleSuggestionClick(suggestion, "suggestion")}
               >
                 <span class="suggestion-text">
                   ${this.highlightMatch(suggestion, this.searchQuery)}
                 </span>
               </div>
             `
-    )}
+          )}
         </div>
       </div>
     `;
@@ -233,21 +262,24 @@ export class ZbSearchAutocomplete extends LitElement {
     return html`
       <div class="products-section">
         ${this.results.products.map(
-      (product) => html`
+          (product) => html`
             <a
-              href=${product.url || '#'}
+              href=${product.url || "#"}
               class="product-item"
-              @click=${() => this.handleSuggestionClick(product.name, 'product')}
+              @click=${() =>
+                this.handleSuggestionClick(product.name, "product")}
             >
-              ${product.image
-          ? html`<img src=${product.image} alt=${product.name} class="product-image" />`
-          : null}
+              ${
+                product.image
+                  ? html`<img src=${product.image} alt=${product.name} class="product-image" />`
+                  : null
+              }
               <span class="product-name">
                  ${this.highlightMatch(product.name, this.searchQuery)}
               </span>
             </a>
           `
-    )}
+        )}
       </div>
     `;
   }
@@ -263,18 +295,18 @@ export class ZbSearchAutocomplete extends LitElement {
         <div class="section-label">PAGES</div>
         <div class="pages-list">
           ${this.results.pages.map(
-      (page) => html`
+            (page) => html`
               <a
-                href=${page.url || '#'}
+                href=${page.url || "#"}
                 class="page-item"
-                @click=${() => this.handleSuggestionClick(page.name, 'page')}
+                @click=${() => this.handleSuggestionClick(page.name, "page")}
               >
                 <span class="page-name">
                     ${this.highlightMatch(page.name, this.searchQuery)}
                 </span>
               </a>
             `
-    )}
+          )}
         </div>
       </div>
     `;
@@ -334,8 +366,9 @@ export class ZbSearchAutocomplete extends LitElement {
                   />
               </div>
               <div class="actions-container">
-                ${this.searchQuery
-        ? html`
+                ${
+                  this.searchQuery
+                    ? html`
                       <button
                         type="button"
                         class="clear-button"
@@ -349,7 +382,8 @@ export class ZbSearchAutocomplete extends LitElement {
                         </svg>
                       </button>
                     `
-        : null}
+                    : null
+                }
                 <div class="search-icon">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -363,14 +397,16 @@ export class ZbSearchAutocomplete extends LitElement {
                 </div>
               </div>
             
-              ${this.open
-        ? html`
+              ${
+                this.open
+                  ? html`
                     <div class="dropdown">
                       ${this.renderLoading()} ${this.renderSuggestions()} ${this.renderProducts()}
                       ${this.renderPages()} ${this.renderEmpty()}
                     </div>
                   `
-        : null}
+                  : null
+              }
             </div>
         </form>
         
@@ -410,30 +446,31 @@ export class ZbSearchAutocomplete extends LitElement {
       --text-tertiary: #999;
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-  .search-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  animation: fadeIn 0.2s ease;
-}
+    .search-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
 
     .search-modal {
-  width: 100%;
-  background: white;
-  padding: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  animation: slideDown 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+      width: 100%;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      animation: slideDown 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .search-container {
       position: relative;
       width: 50%;
@@ -634,7 +671,6 @@ export class ZbSearchAutocomplete extends LitElement {
 
     .product-name, .page-name {
       font-size: 14px;
-      font-weight: 500;
       display: block;
     }
 
@@ -682,11 +718,19 @@ export class ZbSearchAutocomplete extends LitElement {
       background: #eee;
       border-radius: 3px;
     }
+    @media (max-width: 768px) {
+      .search-container {
+        width: 100%;
+      }
+      .search-modal {
+        padding: 10px;
+      }
+    }
   `;
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    'zb-search-autocomplete': ZbSearchAutocomplete;
+    "zb-search-autocomplete": ZbSearchAutocomplete;
   }
 }
