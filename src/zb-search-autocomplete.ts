@@ -18,7 +18,7 @@ export interface PageSuggestion {
 }
 
 export interface SearchResults {
-  suggestions?: string[];
+  suggestions?: ProductSuggestion[];
   products?: ProductSuggestion[];
   pages?: PageSuggestion[];
 }
@@ -118,7 +118,7 @@ export class ZbSearchAutocomplete extends LitElement {
 
     // Map incoming data to component state
     this.results = {
-      suggestions: data.suggestions?.map((s: any) => s.name) || [],
+      suggestions: data.suggestions || [],
       products: data.products || [],
       // Handle view_all_url if needed, or other fields
     };
@@ -181,12 +181,12 @@ export class ZbSearchAutocomplete extends LitElement {
   /**
    * Handle suggestion click
    */
-  private handleSuggestionClick(suggestion: string, type: string) {
+  private handleSuggestionClick(suggestion: string, type: string, url?: string) {
     this.searchQuery = suggestion;
-    this.open = false; // Close on click
+    this.open = false;
     this.dispatchEvent(
       new CustomEvent("suggestion-click", {
-        detail: { suggestion, type },
+        detail: { suggestion, type, url },
         bubbles: true,
         composed: true,
       })
@@ -240,10 +240,10 @@ export class ZbSearchAutocomplete extends LitElement {
               <div
                 class="suggestion-item"
                 @click=${() =>
-                  this.handleSuggestionClick(suggestion, "suggestion")}
+                  this.handleSuggestionClick(suggestion.name, "suggestion", suggestion.url)}
               >
                 <span class="suggestion-text">
-                  ${this.highlightMatch(suggestion, this.searchQuery)}
+                  ${this.highlightMatch(suggestion.name, this.searchQuery)}
                 </span>
               </div>
             `
@@ -263,11 +263,10 @@ export class ZbSearchAutocomplete extends LitElement {
       <div class="products-section">
         ${this.results.products.map(
           (product) => html`
-            <a
-              href=${product.url || "#"}
+            <div
               class="product-item"
               @click=${() =>
-                this.handleSuggestionClick(product.name, "product")}
+                this.handleSuggestionClick(product.name, "product", product.url)}
             >
               ${
                 product.image
@@ -277,7 +276,7 @@ export class ZbSearchAutocomplete extends LitElement {
               <span class="product-name">
                  ${this.highlightMatch(product.name, this.searchQuery)}
               </span>
-            </a>
+            </div>
           `
         )}
       </div>
@@ -296,15 +295,11 @@ export class ZbSearchAutocomplete extends LitElement {
         <div class="pages-list">
           ${this.results.pages.map(
             (page) => html`
-              <a
-                href=${page.url || "#"}
-                class="page-item"
-                @click=${() => this.handleSuggestionClick(page.name, "page")}
-              >
+              <div class="page-item" @click=${() => this.handleSuggestionClick(page.name, "page", page.url)}>
                 <span class="page-name">
                     ${this.highlightMatch(page.name, this.searchQuery)}
                 </span>
-              </a>
+              </div>
             `
           )}
         </div>
@@ -499,7 +494,7 @@ export class ZbSearchAutocomplete extends LitElement {
     }
 
     .search-input-wrapper:focus-within {
-      border-color: #000;
+      border-color: var(--border-color);
     }
 
     .input-content {
@@ -719,11 +714,66 @@ export class ZbSearchAutocomplete extends LitElement {
       border-radius: 3px;
     }
     @media (max-width: 768px) {
+      .search-overlay {
+        background: white; /* Full screen white background */
+        align-items: flex-start;
+      }
+
+      .search-modal {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        box-shadow: none;
+        flex-direction: column;
+        justify-content: flex-start;
+        animation: none;
+      }
+
       .search-container {
         width: 100%;
+        padding: 12px 10px;
+        gap: 12px;
+        border-bottom: 1px solid var(--border-color);
+        box-sizing: border-box;
       }
-      .search-modal {
-        padding: 10px;
+
+      .close-button {
+        padding: 4px;
+        margin-right: 4px;
+      }
+
+      /* Hide the X icon on mobile and show a Back arrow if desired, 
+         or just keep X but on left. 
+         For now, keeping the X but ensuring it's positioned correctly. 
+         To match the image strictly (Back Arrow), we'd need to swap the icon. 
+         Let's stick to layout first. */
+      
+      .search-form {
+        flex: 1;
+      }
+
+      .search-input-wrapper {
+        border-radius: 10px;
+        background-color: white;
+        border: 1px solid var(--border-color);
+      }
+
+      .dropdown {
+        position: fixed;
+        top: 73px; /* Approximate header height (padding + input height) */
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: none;
+        border: none;
+        box-shadow: none;
+        margin-top: 0;
+        z-index: 999;
+      }
+
+      .suggestion-item, .product-item, .page-item {
+        padding: 14px 20px; /* Larger touch targets */
+        font-size: 16px; 
       }
     }
   `;
