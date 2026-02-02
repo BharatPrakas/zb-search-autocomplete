@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ZenBasket Search Autocomplete - Demo</title>
   <link rel="stylesheet" href="./src/index.css" />
-  <script type="module" src="/src/zb-search-autocomplete.ts"></script>
+  <script type="module" src="/src/zb-search-modern.ts"></script>
   <style>
     .demo-container {
       max-width: 800px;
@@ -93,7 +93,7 @@
     }
   </style>
 </head>
-<!-- <body>
+<body>
     <div class="demo-container">
       <div class="demo-header">
         <h1>🔍 ZenBasket Search Autocomplete</h1>
@@ -101,11 +101,10 @@
       </div>
 
       <div class="demo-section">
-        <h2>Live Demo</h2>
-        <zb-search-autocomplete id="searchDemo" placeholder="Search products, pages..."></zb-search-autocomplete>
+        <zb-search-modern id="searchDemo" placeholder="Search products, pages..."></zb-search-modern>
       </div>
 
-      <div class="demo-section">
+      <!-- <div class="demo-section">
         <h2>Event Log</h2>
         <div id="eventLog" class="event-log">
           <div style="color: #999; font-style: italic;">Events will appear here...</div>
@@ -185,7 +184,7 @@ export class HeaderComponent {
   ]
 }</pre>
         </div>
-      </div>
+      </div> -->
     </div>
 
     <script>
@@ -195,20 +194,36 @@ export class HeaderComponent {
 
       // Sample data
       const sampleData = {
-        suggestions: ['as st', 'as sorted', 'as h blonde', 'ash tray', 'ashwagandha'],
+        suggestions: [
+            { name: 'as st', url: '#' }, 
+            { name: 'as sorted', url: '#' }, 
+            { name: 'as h blonde', url: '#' }, 
+            { name: 'ash tray', url: '#' }, 
+            { name: 'ashwagandha', url: '#' }
+        ],
         products: [
           {
             name: 'Ash Trays',
-            url: '/products/ash-trays'
+            url: '/products/ash-trays',
+            price: '$12.00',
+            image: "https://placehold.co/100"
           },
           {
             name: 'TOWEL STAND',
-            url: '/products/towel-stand'
+            url: '/products/towel-stand',
+            price: '$25.50',
+            image: "https://placehold.co/100"
           },
           {
             name: 'Ashwagandha Capsules',
-            url: '/products/ashwagandha'
+            url: '/products/ashwagandha',
+            price: '$18.99',
+            image: "https://placehold.co/100"
           }
+        ],
+        collections: [
+            { name: 'New Arrivals', url: '/collections/new' },
+            { name: 'Best Sellers', url: '/collections/best' }
         ],
         pages: [
           {
@@ -223,6 +238,7 @@ export class HeaderComponent {
       };
 
       function logEvent(eventName, detail) {
+        if (!eventLog) return; // Guard if eventLog not found
         const time = new Date().toLocaleTimeString();
         const logItem = document.createElement('div');
         logItem.className = 'event-log-item';
@@ -255,8 +271,9 @@ export class HeaderComponent {
           
           // Filter sample data based on query
           const filteredResults = {
-            suggestions: sampleData.suggestions.filter(s => s.includes(query)),
+            suggestions: sampleData.suggestions.filter(s => s.name.toLowerCase().includes(query)),
             products: sampleData.products.filter(p => p.name.toLowerCase().includes(query)),
+            collections: sampleData.collections,
             pages: sampleData.pages.filter(p => p.name.toLowerCase().includes(query))
           };
           
@@ -280,11 +297,7 @@ export class HeaderComponent {
         logEvent('suggestion-click', e.detail);
       });
     </script>
-  </body> -->
 
-<body>
-  <zb-search-autocomplete id="searchDemo" placeholder="Search products, pages..."></zb-search-autocomplete>
 
-</body>
 
 </html>

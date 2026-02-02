@@ -6,9 +6,11 @@ export default defineConfig({
     outDir: 'E:/Centizen Projects/zenbasket/zenbasket/zb-app/apps/zb-storefront/public/plugins',
     emptyOutDir: false,
     lib: {
-      entry: 'src/zb-search-autocomplete.ts',
+      entry: {
+        'zb-search-autocomplete': 'src/zb-search-autocomplete.ts',
+        'zb-search-modern': 'src/zb-search-modern.ts',
+      },
       formats: ['es'],
-      fileName: 'zb-search-autocomplete',
     },
     rollupOptions: {
       // Externalize dependencies that shouldn't be bundled

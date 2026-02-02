@@ -1,209 +1,12 @@
-import { LitElement, css, html } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
-
-export interface SearchSuggestion {
-  text: string;
-  type: "suggestion" | "product" | "page";
-}
-
-export interface ProductSuggestion {
-  name: string;
-  image?: string;
-  url?: string;
-}
-
-export interface PageSuggestion {
-  name: string;
-  url?: string;
-}
-
-export interface SearchResults {
-  suggestions?: ProductSuggestion[];
-  products?: ProductSuggestion[];
-  pages?: PageSuggestion[];
-}
+import { css, html } from "lit";
+import { customElement } from "lit/decorators.js";
+import { SearchBase } from "./search-base";
 
 @customElement("zb-search-autocomplete")
-export class ZbSearchAutocomplete extends LitElement {
-  @property({ type: String })
-  placeholder = "Search";
-
-  @property({ type: String })
-  apiEndpoint = "";
-
-  @property({ type: Number })
-  debounceDelay = 300;
-
-  @property({ type: Boolean, reflect: true })
-  open = false;
-
-  @state()
-  private searchQuery = "";
-
-  @state()
-  private results: SearchResults = {};
-
-  @state()
-  private loading = false;
-
-  private debounceTimer: number | null = null;
-
-  private handleInput(e: Event) {
-    const input = e.target as HTMLInputElement;
-    this.searchQuery = input.value;
-
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-    }
-
-    // Dispatch moved to performSearch for debouncing
-    // this.dispatchEvent(
-    //   new CustomEvent('search-input', {
-    //     detail: { query: this.searchQuery },
-    //     bubbles: true,
-    //     composed: true,
-    //   })
-    // );
-
-    if (this.searchQuery.trim()) {
-      this.open = true;
-      this.debounceTimer = window.setTimeout(() => {
-        this.performSearch();
-      }, this.debounceDelay);
-    } else {
-      this.open = false;
-      this.results = {};
-    }
-  }
-
-  private performSearch() {
-    if (!this.searchQuery.trim()) return;
-
-    this.loading = true;
-
-    // Dispatch search event to host
-    this.dispatchEvent(
-      new CustomEvent("search-input", {
-        detail: { query: this.searchQuery },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
-  override connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener(
-      "zb-search-response",
-      this.handleSearchResponse.bind(this) as EventListener
-    );
-  }
-
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-    window.removeEventListener(
-      "zb-search-response",
-      this.handleSearchResponse.bind(this) as EventListener
-    );
-  }
-
-  private handleSearchResponse(e: CustomEvent) {
-    const data = e.detail?.data;
-    console.log("event", e);
-    console.log("data", data);
-    if (!data) return;
-
-    // Optional: Check if response query matches current query to avoid race conditions
-    // But user might want to see results anyway.
-
-    // Map incoming data to component state
-    this.results = {
-      suggestions: data.suggestions || [],
-      products: data.products || [],
-      // Handle view_all_url if needed, or other fields
-    };
-
-    this.loading = false;
-    this.open = true;
-  }
-
-  /**
-   * Public method to set search results (for external API integration)
-   */
-  public setResults(results: SearchResults) {
-    this.results = results;
-    this.loading = false;
-  }
-
-  /**
-   * Handle search submit
-   */
-  private handleSubmit(e: Event) {
-    e.preventDefault();
-    this.dispatchEvent(
-      new CustomEvent("search-submit", {
-        detail: { query: this.searchQuery },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
-  /**
-   * Clear search
-   */
-  private handleClear() {
-    this.searchQuery = "";
-    this.results = {};
-    this.open = false;
-    this.dispatchEvent(
-      new CustomEvent("search-clear", {
-        bubbles: true,
-        composed: true,
-      })
-    );
-    this.focusInput();
-  }
-
-  /**
-   * Close dropdown
-   */
-  private handleClose() {
-    this.open = false;
-    this.dispatchEvent(
-      new CustomEvent("search-close", {
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
-  /**
-   * Handle suggestion click
-   */
-  private handleSuggestionClick(suggestion: string, type: string, url?: string) {
-    this.searchQuery = suggestion;
-    this.open = false;
-    this.dispatchEvent(
-      new CustomEvent("suggestion-click", {
-        detail: { suggestion, type, url },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
-  /**
-   * Focus the search input
-   */
-  private focusInput() {
-    const input = this.shadowRoot?.querySelector("input");
-    input?.focus();
-  }
-
+export class ZbSearchAutocomplete extends SearchBase {
+  
   /**
    * Highlight parts of text that match/don't match query.
-   * Logic: Bold parts that capture the "suggestion" (i.e. NOT the typed query).
    */
   private highlightMatch(text: string, query: string) {
     if (!query) return html`${text}`;
@@ -286,26 +89,7 @@ export class ZbSearchAutocomplete extends LitElement {
   /**
    * Render page suggestions
    */
-  private renderPages() {
-    if (!this.results.pages?.length) return null;
 
-    return html`
-      <div class="pages-section">
-        <div class="section-label">PAGES</div>
-        <div class="pages-list">
-          ${this.results.pages.map(
-            (page) => html`
-              <div class="page-item" @click=${() => this.handleSuggestionClick(page.name, "page", page.url)}>
-                <span class="page-name">
-                    ${this.highlightMatch(page.name, this.searchQuery)}
-                </span>
-              </div>
-            `
-          )}
-        </div>
-      </div>
-    `;
-  }
 
   /**
    * Render loading state
@@ -329,8 +113,8 @@ export class ZbSearchAutocomplete extends LitElement {
       this.loading ||
       !this.searchQuery ||
       this.results.suggestions?.length ||
-      this.results.products?.length ||
-      this.results.pages?.length
+      this.results.products?.length
+      // this.results.pages?.length
     ) {
       return null;
     }
@@ -397,7 +181,7 @@ export class ZbSearchAutocomplete extends LitElement {
                   ? html`
                     <div class="dropdown">
                       ${this.renderLoading()} ${this.renderSuggestions()} ${this.renderProducts()}
-                      ${this.renderPages()} ${this.renderEmpty()}
+                      ${this.renderEmpty()}
                     </div>
                   `
                   : null
@@ -637,12 +421,12 @@ export class ZbSearchAutocomplete extends LitElement {
       font-weight: 700;
     }
 
-    .products-section, .pages-section {
+    .products-section {
       padding: 8px 0;
       border-top: 1px solid var(--border-color);
     }
 
-    .product-item, .page-item {
+    .product-item {
       padding: 8px 16px;
       display: flex;
       align-items: center;
@@ -652,7 +436,7 @@ export class ZbSearchAutocomplete extends LitElement {
       color: var(--text-primary);
     }
     
-    .product-item:hover, .page-item:hover {
+    .product-item:hover {
         background-color: var(--hover-bg);
     }
 
@@ -664,7 +448,7 @@ export class ZbSearchAutocomplete extends LitElement {
       flex-shrink: 0;
     }
 
-    .product-name, .page-name {
+    .product-name {
       font-size: 14px;
       display: block;
     }
@@ -741,12 +525,6 @@ export class ZbSearchAutocomplete extends LitElement {
         padding: 4px;
         margin-right: 4px;
       }
-
-      /* Hide the X icon on mobile and show a Back arrow if desired, 
-         or just keep X but on left. 
-         For now, keeping the X but ensuring it's positioned correctly. 
-         To match the image strictly (Back Arrow), we'd need to swap the icon. 
-         Let's stick to layout first. */
       
       .search-form {
         flex: 1;
@@ -771,7 +549,7 @@ export class ZbSearchAutocomplete extends LitElement {
         z-index: 999;
       }
 
-      .suggestion-item, .product-item, .page-item {
+      .suggestion-item, .product-item {
         padding: 14px 20px; /* Larger touch targets */
         font-size: 16px; 
       }
