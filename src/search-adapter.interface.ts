@@ -11,7 +11,8 @@ export interface SearchAdapter {
 export interface CoreAPI {
   navigation: NavigationAPI;
   image: ImageAPI;
-  utils?: UtilityAPI;
+  graphqlClient: GraphqlClient;
+  store: StoreAPI;
 }
 
 export interface NavigationAPI {
@@ -23,14 +24,17 @@ export interface ImageAPI {
   buildUrl(path: string, config?: ImageConfig): string;
 }
 
-export interface UtilityAPI {
-  trackEvent?(name: string, payload?: any): void;
-}
 export interface SearchSuggestionData {
   query: string;
   suggestions: SearchSuggestionCategory[];
   products: SearchSuggestionProduct[];
   view_all_url: string;
+}
+export interface GetSearchSuggestionResponse {
+    i1_getSearchSuggestion: GetSearchSuggestionResponseData
+}
+export interface GetSearchSuggestionResponseData {
+    data: SearchSuggestionData;
 }
 export interface SearchSuggestionCategory {
   name: string;
@@ -41,4 +45,12 @@ export interface SearchSuggestionProduct {
   name: string;
   image: string | null;
   url: string;
+}
+
+export interface GraphqlClient {
+  executeQuery(query: string, variables?: any): Promise<any>;
+}
+
+export interface StoreAPI {
+  getStoreId(): number;
 }

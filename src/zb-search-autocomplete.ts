@@ -64,6 +64,7 @@ export class ZbSearchAutocomplete extends SearchBase {
 
     return html`
       <div class="products-section">
+        <div class="section-label">PRODUCTS</div>
         ${this.results.products.map(
           (product) => html`
             <div

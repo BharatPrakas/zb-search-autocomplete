@@ -1,8 +1,14 @@
 import { LitElement } from "lit";
 import { property, state } from "lit/decorators.js";
-import type { CoreAPI, SearchAdapter, SearchSuggestionData, SearchSuggestionProduct } from "./search-adapter.interface";
+import type { CoreAPI, GetSearchSuggestionResponse, SearchAdapter, SearchSuggestionData, SearchSuggestionProduct } from "./search-adapter.interface";
 
 export class SearchBase extends LitElement {
+  @property({ type: Object })
+  adapter?: SearchAdapter;
+
+  @property({ type: Object })
+  core?: CoreAPI;
+
   @property({ type: String })
   placeholder = "Search";
 
@@ -25,6 +31,25 @@ export class SearchBase extends LitElement {
   loading = false;
 
   protected debounceTimer: number | null = null;
+
+  protected query = `query I1_getSearchSuggestion($input: i1_GetSearchSuggestionInput) {
+       i1_getSearchSuggestion(input: $input) {
+         data {
+           query
+           suggestions {
+             name
+             id
+             url
+           }
+           products {
+             name
+             image
+             url
+           }
+           view_all_url
+         }
+       }
+        }`;
 
   override connectedCallback() {
     super.connectedCallback();
@@ -61,34 +86,43 @@ export class SearchBase extends LitElement {
     }
   }
 
-  @property({ type: Object })
-  adapter?: SearchAdapter;
-  @property({ type: Object })
-  core?: CoreAPI;
-
   protected performSearch() {
     if (!this.searchQuery.trim()) return;
-
     this.loading = true;
-
-    if (this.adapter) {
-      this.adapter.getSuggestion(this.searchQuery).then((res: SearchSuggestionData) => {
-        if (res) {
-          this.results = res;
-          this.results.products = res.products.map((p: SearchSuggestionProduct) => {
+    if (this.core) {
+      const storeId = this.core?.store.getStoreId();
+      const variables = { input: { params: { storeId }, query: { storeId, limit: 10, offset: 0, searchQuery: this.searchQuery } } };
+      this.core?.graphqlClient.executeQuery(this.query, variables).then((res: GetSearchSuggestionResponse) => {
+        if (res && res.i1_getSearchSuggestion.data) {
+          console.log('Search Response', res.i1_getSearchSuggestion.data);
+          this.results = res.i1_getSearchSuggestion.data;
+          this.results.products = res.i1_getSearchSuggestion.data.products.map((p: SearchSuggestionProduct) => {
             return {
               ...p,
-              image: this.core?.image.buildUrl(p.image || 'assets/images/placeholder.png', {
-                width: 100,
-                height: 100,
-              }),
+              image: this.core?.image.buildUrl(p.image || 'assets/images/placeholder.png', {width: 300, height: 300}),
             } as SearchSuggestionProduct;
           });
-          console.log("this.results", this.results);
           this.loading = false;
           this.open = true;
         }
       });
+      // this.adapter.getSuggestion(this.searchQuery).then((res: SearchSuggestionData) => {
+      //   if (res) {
+      //     this.results = res;
+      //     this.results.products = res.products.map((p: SearchSuggestionProduct) => {
+      //       return {
+      //         ...p,
+      //         image: this.core?.image.buildUrl(p.image || 'assets/images/placeholder.png', {
+      //           width: 100,
+      //           height: 100,
+      //         }),
+      //       } as SearchSuggestionProduct;
+      //     });
+      //     console.log("this.results", this.results);
+      //     this.loading = false;
+      //     this.open = true;
+      //   }
+      // });
       return;
     }
 
@@ -154,6 +188,12 @@ export class SearchBase extends LitElement {
     this.searchQuery = suggestion;
     this.open = false;
     this.core?.navigation.navigate(url!);
+    this.dispatchEvent(
+      new CustomEvent("search-close", {
+        bubbles: true,
+        composed: true,
+      })
+    );
     // if (this.router && url) {
     //   const cleanUrl = this.router.getUrlTree(url, this.activatedRoute!);
     //   console.log('cleanUrl',cleanUrl);

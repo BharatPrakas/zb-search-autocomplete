@@ -31,9 +31,10 @@ export class ZbSearchModern extends SearchBase {
             <div class="sidebar-section">
                 <div class="section-label">Suggestions</div>
                 <div class="list-items">
-                    ${this.results.suggestions!.slice(0, 5).map(suggestion => html`
+                    ${this.results.suggestions!.slice(0, 10).map(suggestion => html`
                         <div class="sidebar-item" 
                              @click=${() => this.handleSuggestionClick(suggestion.name, "suggestion", suggestion.url)}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                             ${this.highlightMatch(suggestion.name, this.searchQuery)}
                         </div>
                     `)}
@@ -56,10 +57,10 @@ export class ZbSearchModern extends SearchBase {
             <a href="${this.results.view_all_url || '#'}" class="view-all-link">View all products</a>
         </div>
         <div class="products-grid">
-            ${this.results.products.slice(0, 4).map(product => html`
+            ${this.results.products.slice(0, 8).map(product => html`
                 <div class="product-card" @click=${() => this.handleSuggestionClick(product.name, "product", product.url)}>
                     <div class="image-container">
-                        ${product.image ? html`<img src="${product.image}" alt="${product.name}">` : html`<div class="placeholder-image"></div>`}
+                        ${product.image ? html`<img src="${product.image}" alt="${product.name}">` : html`<div class="placeholder-image"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`}
                     </div>
                     <div class="product-info">
                         <div class="product-name">${product.name}</div>
@@ -113,197 +114,309 @@ export class ZbSearchModern extends SearchBase {
 
   static styles = css`
     :host {
-        font-family: 'DM Sans', sans-serif; /* Setup font matching later if needed */
-        --primary-text: #1a1a1a;
-        --secondary-text: #666666;
-        --border-color: #e5e5e5;
-        --accent-color: #000;
-        --modal-bg: #fff;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --primary-text: #1a1a1a;
+      --secondary-text: #666666;
+      --border-color: #f0f0f0;
+      --accent-color: #000;
+      --modal-bg: #ffffff;
+      --input-bg: #f5f5f5;
+      --hover-bg: #f9f9f9;
+      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     .search-overlay {
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.4);
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        z-index: 10000;
-        padding-top: 0px; 
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--modal-bg);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .search-modal {
-        width: 100%;
-        max-width: 1000px; /* Wider for grid layout */
-        background: white;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
-        margin-top: 60px; /* Spacing from top */
-        border-radius: 4px; /* Slight rounding or none? Image looks sharp. Let's do 0 or 2px. */
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      background: var(--modal-bg);
     }
 
     .search-header {
-        display: flex;
-        align-items: center;
-        padding: 20px 24px;
-        border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+      background: #fff;
     }
 
     .search-icon {
-        color: var(--primary-text);
-        margin-right: 16px;
+      color: var(--secondary-text);
+      margin-right: 16px;
+      display: flex;
+      align-items: center;
     }
 
     .search-input {
-        flex: 1;
-        border: none;
-        font-size: 18px;
-        outline: none;
-        color: var(--primary-text);
+      flex: 1;
+      border: none;
+      font-size: 18px;
+      outline: none;
+      color: var(--primary-text);
+      background: transparent;
+      padding: 8px 0;
+      font-weight: 500;
+    }
+
+    .search-input::placeholder {
+      color: #999;
+      font-weight: 400;
     }
 
     .close-button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 8px;
-        color: var(--secondary-text);
+      background: #f0f0f0;
+      border: none;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-text);
+      transition: all 0.2s;
+    }
+
+    .close-button:hover {
+      background: #e0e0e0;
+      transform: scale(1.05);
     }
 
     .results-container {
-        display: flex;
-        min-height: 400px;
-        align-items: stretch;
+      display: flex;
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
     }
 
     /* LEFT SIDEBAR */
     .sidebar {
-        width: 250px;
-        flex-shrink: 0;
-        border-right: 1px solid var(--border-color);
-        padding: 24px;
-        background: #fafafaab; /* Slight off-white maybe? Looks white in image but sidebar usually distinct */
+      width: 300px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-color);
+      padding: 32px 24px;
+      background: #ffffff;
     }
 
     .sidebar-section {
-        margin-bottom: 32px;
+      margin-bottom: 32px;
     }
 
     .section-label {
-        font-weight: 700;
-        font-size: 14px;
-        margin-bottom: 12px;
-        color: var(--primary-text);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      color: #888;
+    }
+
+    .list-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .sidebar-item {
-        padding: 6px 0;
-        color: var(--secondary-text);
-        cursor: pointer;
-        font-size: 14px;
-        transition: color 0.2s;
+      padding: 10px 12px;
+      color: var(--primary-text);
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.2s;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
     }
     
     .sidebar-item:hover {
-        color: var(--accent-color);
+      background: var(--hover-bg);
+      color: var(--accent-color);
+      padding-left: 16px;
+    }
+
+    .sidebar-item svg {
+      margin-right: 12px;
+      opacity: 0.5;
     }
     
     .highlight-bold {
-        font-weight: bold;
-        color: var(--primary-text);
+      font-weight: 700;
+      color: var(--primary-text);
     }
 
     /* RIGHT CONTENT */
     .main-content {
-        flex: 1;
-        padding: 24px 32px;
+      flex: 1;
+      padding: 32px 40px;
+      background: #fcfcfc;
     }
 
     .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: bottom;
-        margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
     }
 
     .section-title {
-        font-weight: 700;
-        font-size: 14px;
-        color: var(--primary-text);
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--primary-text);
     }
 
     .view-all-link {
-        font-size: 12px;
-        color: #0044cc; /* Blue link color */
-        text-decoration: underline;
-        cursor: pointer;
+      font-size: 14px;
+      color: var(--primary-text);
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      transition: opacity 0.2s;
+    }
+
+    .view-all-link:hover {
+      opacity: 0.7;
+    }
+
+    .view-all-link::after {
+      content: '→';
+      margin-left: 6px;
+      font-family: sans-serif;
     }
 
     .products-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 24px;
     }
 
     .product-card {
-        cursor: pointer;
-        text-align: center;
-        group: hover;
+      cursor: pointer;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      border: 1px solid transparent;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--card-hover-shadow);
+      border-color: rgba(0,0,0,0.05);
     }
 
     .image-container {
-        width: 100%;
-        aspect-ratio: 1; /* Square images */
-        background: #f4f4f4;
-        margin-bottom: 12px;
-        overflow: hidden;
+      width: 100%;
+      aspect-ratio: 1;
+      background: #f8f8f8;
+      overflow: hidden;
+      position: relative;
     }
 
     .image-container img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
     }
 
     .product-card:hover .image-container img {
-        transform: scale(1.05);
+      transform: scale(1.08);
+    }
+
+    .product-info {
+      padding: 16px;
     }
 
     .product-name {
-        font-size: 13px;
-        font-weight: 600;
-        color: #000080; /* Dark Blue title */
-        margin-bottom: 4px;
-        line-height: 1.4;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--primary-text);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
-
-
     .placeholder-image {
-        width: 100%;
-        height: 100%;
-        background-color: #eee;
+      width: 100%;
+      height: 100%;
+      background-color: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ccc;
     }
 
     .loading {
-        padding: 20px;
-        text-align: center;
-        color: var(--secondary-text);
+      padding: 40px;
+      text-align: center;
+      color: var(--secondary-text);
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
     }
 
     @media (max-width: 768px) {
+       .search-modal {
+           width: 100%;
+       }
+       
+       .search-header {
+           padding: 12px 16px;
+       }
+
        .results-container {
            flex-direction: column;
        }
+
        .sidebar {
            width: 100%;
            border-right: none;
            border-bottom: 1px solid var(--border-color);
+           padding: 20px 16px;
        }
+
+       .main-content {
+           padding: 20px 16px;
+       }
+
        .products-grid {
            grid-template-columns: repeat(2, 1fr);
+           gap: 16px;
+       }
+       
+       .product-name {
+           font-size: 13px;
+       }
+       
+       .close-button {
+           width: 32px;
+           height: 32px;
        }
     }
   `;
