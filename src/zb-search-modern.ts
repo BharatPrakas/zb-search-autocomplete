@@ -33,7 +33,7 @@ export class ZbSearchModern extends SearchBase {
                 <div class="list-items">
                     ${this.results.suggestions!.slice(0, 10).map(suggestion => html`
                         <div class="sidebar-item" 
-                             @click=${() => this.handleSuggestionClick(suggestion.name, "suggestion", suggestion.url)}>
+                             @click=${() => this.handleSuggestionClick(suggestion.name, suggestion.url)}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                             ${this.highlightMatch(suggestion.name, this.searchQuery)}
                         </div>
@@ -58,7 +58,7 @@ export class ZbSearchModern extends SearchBase {
         </div>
         <div class="products-grid">
             ${this.results.products.slice(0, 8).map(product => html`
-                <div class="product-card" @click=${() => this.handleSuggestionClick(product.name, "product", product.url)}>
+                <div class="product-card" @click=${() => this.handleSuggestionClick(product.name, product.url)}>
                     <div class="image-container">
                         ${product.image ? html`<img src="${product.image}" alt="${product.name}">` : html`<div class="placeholder-image"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`}
                     </div>
@@ -73,6 +73,19 @@ export class ZbSearchModern extends SearchBase {
   }
 
   render() {
+    if (!this.open) {
+        return html`
+            <div class="launcher" @click=${() => {this.open = true}}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+                </svg>
+            </div>
+        `;
+    }
+
     return html`
       <div class="search-overlay">
         <div class="search-modal">
@@ -99,7 +112,7 @@ export class ZbSearchModern extends SearchBase {
                 </button>
             </div>
             
-            ${this.open && (this.results.products?.length || this.results.suggestions?.length) ? html`
+            ${this.results.products?.length || this.results.suggestions?.length ? html`
                 <div class="results-container">
                     ${this.renderSuggestions()}
                     ${this.renderProducts()}
@@ -110,6 +123,10 @@ export class ZbSearchModern extends SearchBase {
         </div>
       </div>
     `;
+  }
+
+  updated() {
+    if(this.open) this.focusInput();
   }
 
   static styles = css`
@@ -124,6 +141,21 @@ export class ZbSearchModern extends SearchBase {
       --hover-bg: #f9f9f9;
       --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
       --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .launcher {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        color: var(--primary-text);
+        transition: transform 0.2s;
+    }
+
+    .launcher:hover {
+        transform: scale(1.1);
     }
 
     .search-overlay {
@@ -388,6 +420,23 @@ export class ZbSearchModern extends SearchBase {
        
        .search-header {
            padding: 12px 16px;
+       }
+
+       .search-input {
+           font-size: 14px; /* Prevents zoom on iOS and matches native size */
+       }
+       
+       .section-title {
+            font-size: 16px;
+       }
+
+       .sidebar-item {
+           padding: 12px 14px;
+           font-size: 14px;
+       }
+       
+       .section-label {
+           font-size: 11px;
        }
 
        .results-container {

@@ -7,6 +7,7 @@
   <title>ZenBasket Search Autocomplete - Demo</title>
   <link rel="stylesheet" href="./src/index.css" />
   <script type="module" src="/src/zb-search-modern.ts"></script>
+  <script type="module" src="/src/zb-search-autocomplete.ts"></script>
   <style>
     .demo-container {
       max-width: 800px;
@@ -93,7 +94,7 @@
     }
   </style>
 </head>
-<body>
+<body style="background-color: #f5f5f5;">
     <div class="demo-container">
       <div class="demo-header">
         <h1>🔍 ZenBasket Search Autocomplete</h1>
@@ -101,7 +102,19 @@
       </div>
 
       <div class="demo-section">
+        <h2>Modern Search Autocomplete</h2>
         <zb-search-modern id="searchDemo" placeholder="Search products, pages..."></zb-search-modern>
+        <div id="eventLog" class="event-log">
+          <div style="color: #999; font-style: italic;">Events will appear here...</div>
+        </div>
+      </div>
+
+          <div class="demo-section">
+        <h2>Search Autocomplete</h2>
+        <zb-search-autocomplete id="searchDemo" placeholder="Search products, pages..."></zb-search-autocomplete>
+        <div id="eventLog" class="event-log">
+          <div style="color: #999; font-style: italic;">Events will appear here...</div>
+        </div>
       </div>
 
       <!-- <div class="demo-section">

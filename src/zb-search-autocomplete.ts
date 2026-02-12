@@ -43,7 +43,7 @@ export class ZbSearchAutocomplete extends SearchBase {
               <div
                 class="suggestion-item"
                 @click=${() =>
-                  this.handleSuggestionClick(suggestion.name, "suggestion", suggestion.url)}
+                  this.handleSuggestionClick(suggestion.name, suggestion.url)}
               >
                 <span class="suggestion-text">
                   ${this.highlightMatch(suggestion.name, this.searchQuery)}
@@ -70,7 +70,7 @@ export class ZbSearchAutocomplete extends SearchBase {
             <div
               class="product-item"
               @click=${() =>
-                this.handleSuggestionClick(product.name, "product", product.url)}
+                this.handleSuggestionClick(product.name, product.url)}
             >
               ${
                 product.image
@@ -128,6 +128,19 @@ export class ZbSearchAutocomplete extends SearchBase {
   }
 
   render() {
+    if (!this.open) {
+        return html`
+            <div class="launcher" @click=${() => this.open = true}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+                </svg>
+            </div>
+        `;
+    }
+
     return html`
     <div class="search-overlay">
     <div class="search-modal">
@@ -143,6 +156,7 @@ export class ZbSearchAutocomplete extends SearchBase {
                     @input=${this.handleInput}
                     autocomplete="off"
                     spellcheck="false"
+                    autofocus
                   />
               </div>
               <div class="actions-container">
@@ -178,7 +192,7 @@ export class ZbSearchAutocomplete extends SearchBase {
               </div>
             
               ${
-                this.open
+                this.results.suggestions?.length || this.results.products?.length
                   ? html`
                     <div class="dropdown">
                       ${this.renderLoading()} ${this.renderSuggestions()} ${this.renderProducts()}
@@ -213,6 +227,10 @@ export class ZbSearchAutocomplete extends SearchBase {
     `;
   }
 
+  updated() {
+    if(this.open) this.focusInput();
+  }
+  
   static styles = css`
     :host {
       display: block;
@@ -226,6 +244,22 @@ export class ZbSearchAutocomplete extends SearchBase {
       --text-tertiary: #999;
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+    
+    .launcher {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        color: var(--text-primary);
+        transition: transform 0.2s;
+    }
+
+    .launcher:hover {
+        transform: scale(1.1);
+    }
+
     .search-overlay {
       position: fixed;
       top: 0;

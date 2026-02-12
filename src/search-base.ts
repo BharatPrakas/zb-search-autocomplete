@@ -1,19 +1,14 @@
 import { LitElement } from "lit";
 import { property, state } from "lit/decorators.js";
-import type { CoreAPI, GetSearchSuggestionResponse, SearchAdapter, SearchSuggestionData, SearchSuggestionProduct } from "./search-adapter.interface";
+import type { CoreAPI, GetSearchSuggestionResponse, SearchSuggestionData, SearchSuggestionProduct } from "./search-adapter.interface";
 
 export class SearchBase extends LitElement {
-  @property({ type: Object })
-  adapter?: SearchAdapter;
 
   @property({ type: Object })
   core?: CoreAPI;
 
   @property({ type: String })
   placeholder = "Search";
-
-  @property({ type: String })
-  apiEndpoint = "";
 
   @property({ type: Number })
   debounceDelay = 300;
@@ -33,39 +28,39 @@ export class SearchBase extends LitElement {
   protected debounceTimer: number | null = null;
 
   protected query = `query I1_getSearchSuggestion($input: i1_GetSearchSuggestionInput) {
-       i1_getSearchSuggestion(input: $input) {
-         data {
-           query
-           suggestions {
-             name
-             id
-             url
-           }
-           products {
-             name
-             image
-             url
-           }
-           view_all_url
-         }
-       }
-        }`;
+    i1_getSearchSuggestion(input: $input) {
+      data {
+        query
+        suggestions {
+          name
+          id
+          url
+        }
+        products {
+          name
+          image
+          url
+        }
+        view_all_url
+      }
+    }
+  }`;
 
-  override connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener(
-      "zb-search-response",
-      this.handleSearchResponse.bind(this) as EventListener
-    );
-  }
+  // override connectedCallback() {
+  //   super.connectedCallback();
+  //   window.addEventListener(
+  //     "zb-search-response",
+  //     this.handleSearchResponse.bind(this) as EventListener
+  //   );
+  // }
 
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-    window.removeEventListener(
-      "zb-search-response",
-      this.handleSearchResponse.bind(this) as EventListener
-    );
-  }
+  // override disconnectedCallback() {
+  //   super.disconnectedCallback();
+  //   window.removeEventListener(
+  //     "zb-search-response",
+  //     this.handleSearchResponse.bind(this) as EventListener
+  //   );
+  // }
 
   protected handleInput(e: Event) {
     const input = e.target as HTMLInputElement;
@@ -81,7 +76,7 @@ export class SearchBase extends LitElement {
         this.performSearch();
       }, this.debounceDelay);
     } else {
-      this.open = false;
+      // this.open = false;
       this.results = {} as SearchSuggestionData;
     }
   }
@@ -106,33 +101,15 @@ export class SearchBase extends LitElement {
           this.open = true;
         }
       });
-      // this.adapter.getSuggestion(this.searchQuery).then((res: SearchSuggestionData) => {
-      //   if (res) {
-      //     this.results = res;
-      //     this.results.products = res.products.map((p: SearchSuggestionProduct) => {
-      //       return {
-      //         ...p,
-      //         image: this.core?.image.buildUrl(p.image || 'assets/images/placeholder.png', {
-      //           width: 100,
-      //           height: 100,
-      //         }),
-      //       } as SearchSuggestionProduct;
-      //     });
-      //     console.log("this.results", this.results);
-      //     this.loading = false;
-      //     this.open = true;
-      //   }
-      // });
       return;
     }
-
-    this.dispatchEvent(
-      new CustomEvent("search-input", {
-        detail: { query: this.searchQuery },
-        bubbles: true,
-        composed: true,
-      })
-    );
+    // this.dispatchEvent(
+    //   new CustomEvent("search-input", {
+    //     detail: { query: this.searchQuery },
+    //     bubbles: true,
+    //     composed: true,
+    //   })
+    // );
   }
 
   protected handleSearchResponse(e: CustomEvent) {
@@ -152,48 +129,51 @@ export class SearchBase extends LitElement {
 
   protected handleSubmit(e: Event) {
     e.preventDefault();
-    this.dispatchEvent(
-      new CustomEvent("search-submit", {
-        detail: { query: this.searchQuery },
-        bubbles: true,
-        composed: true,
-      })
-    );
+    // this.dispatchEvent(
+    //   new CustomEvent("search-submit", {
+    //     detail: { query: this.searchQuery },
+    //     bubbles: true,
+    //     composed: true,
+    //   })
+    // );
   }
 
   protected handleClear() {
     this.searchQuery = "";
     this.results = {} as SearchSuggestionData;
-    this.open = false;
-    this.dispatchEvent(
-      new CustomEvent("search-clear", {
-        bubbles: true,
-        composed: true,
-      })
-    );
+    // this.open = false;
+    // this.dispatchEvent(
+    //   new CustomEvent("search-clear", {
+    //     bubbles: true,
+    //     composed: true,
+    //   })
+    // );
     this.focusInput();
   }
 
   protected handleClose() {
     this.open = false;
-    this.dispatchEvent(
-      new CustomEvent("search-close", {
-        bubbles: true,
-        composed: true,
-      })
-    );
+    this.results = {} as SearchSuggestionData;
+    this.searchQuery = "";
+    this.loading = false;
+    // this.dispatchEvent(
+    //   new CustomEvent("search-close", {
+    //     bubbles: true,
+    //     composed: true,
+    //   })
+    // );
   }
 
-  protected handleSuggestionClick(suggestion: string, type: string, url?: string) {
+  protected handleSuggestionClick(suggestion: string, url?: string) {
     this.searchQuery = suggestion;
     this.open = false;
     this.core?.navigation.navigate(url!);
-    this.dispatchEvent(
-      new CustomEvent("search-close", {
-        bubbles: true,
-        composed: true,
-      })
-    );
+    // this.dispatchEvent(
+    //   new CustomEvent("search-close", {
+    //     bubbles: true,
+    //     composed: true,
+    //   })
+    // );
     // if (this.router && url) {
     //   const cleanUrl = this.router.getUrlTree(url, this.activatedRoute!);
     //   console.log('cleanUrl',cleanUrl);
@@ -201,13 +181,13 @@ export class SearchBase extends LitElement {
     //   return;
     // }
 
-    this.dispatchEvent(
-      new CustomEvent("suggestion-click", {
-        detail: { suggestion, type, url },
-        bubbles: true,
-        composed: true,
-      })
-    );
+    // this.dispatchEvent(
+    //   new CustomEvent("suggestion-click", {
+    //     detail: { suggestion, type, url },
+    //     bubbles: true,
+    //     composed: true,
+    //   })
+    // );
   }
 
   protected focusInput() {
