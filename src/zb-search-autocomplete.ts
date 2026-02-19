@@ -5,7 +5,7 @@ import { SearchBase } from "./search-base";
 @customElement("zb-search-autocomplete")
 export class ZbSearchAutocomplete extends SearchBase {
   
-  /**
+  /** 
    * Highlight parts of text that match/don't match query.
    */
   private highlightMatch(text: string, query: string) {
@@ -88,11 +88,6 @@ export class ZbSearchAutocomplete extends SearchBase {
   }
 
   /**
-   * Render page suggestions
-   */
-
-
-  /**
    * Render loading state
    */
   private renderLoading() {
@@ -110,13 +105,7 @@ export class ZbSearchAutocomplete extends SearchBase {
    * Render empty state
    */
   private renderEmpty() {
-    if (
-      this.loading ||
-      !this.searchQuery ||
-      this.results.suggestions?.length ||
-      this.results.products?.length
-      // this.results.pages?.length
-    ) {
+    if (this.loading || !this.searchQuery || this.results.suggestions?.length || this.results.products?.length) {
       return null;
     }
 
@@ -156,6 +145,7 @@ export class ZbSearchAutocomplete extends SearchBase {
                     @input=${this.handleInput}
                     autocomplete="off"
                     spellcheck="false"
+                    enterkeyhint="search"
                     autofocus
                   />
               </div>
@@ -192,7 +182,7 @@ export class ZbSearchAutocomplete extends SearchBase {
               </div>
             
               ${
-                this.results.suggestions?.length || this.results.products?.length
+                this.searchQuery
                   ? html`
                     <div class="dropdown">
                       ${this.renderLoading()} ${this.renderSuggestions()} ${this.renderProducts()}

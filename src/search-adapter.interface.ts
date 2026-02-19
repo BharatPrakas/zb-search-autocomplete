@@ -54,3 +54,9 @@ export interface GraphqlClient {
 export interface StoreAPI {
   getStoreId(): number;
 }
+
+export interface SearchConfig {
+  searchLimit: number;
+  debounceDelay: number;
+  placeholder: string;
+}

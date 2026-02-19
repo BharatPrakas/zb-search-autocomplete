@@ -72,6 +72,26 @@ export class ZbSearchModern extends SearchBase {
     `;
   }
 
+  private renderEmpty() {
+    if (this.loading || !this.searchQuery || this.results.suggestions?.length || this.results.products?.length) {
+      return null;
+    }
+
+    return html`
+      <div class="empty-state">
+        <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+        </div>
+        <div class="empty-text">No results found for "${this.searchQuery}"</div>
+        <div class="empty-subtext">Try checking your spelling or use different keywords</div>
+      </div>
+    `;
+  }
+
   render() {
     if (!this.open) {
         return html`
@@ -89,7 +109,7 @@ export class ZbSearchModern extends SearchBase {
     return html`
       <div class="search-overlay">
         <div class="search-modal">
-            <div class="search-header">
+            <form class="search-header" @submit=${this.handleSubmit}>
                 <div class="search-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -102,16 +122,19 @@ export class ZbSearchModern extends SearchBase {
                     placeholder="${this.placeholder}"
                     .value="${this.searchQuery}"
                     @input="${this.handleInput}"
+                    enterkeyhint="search"
                     autofocus
                 >
-                <button class="close-button" @click="${this.handleClose}">
+                <button class="close-button" type="button" @click="${this.handleClose}">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </button>
-            </div>
+            </form>
             
+            ${this.renderEmpty()}
+
             ${this.results.products?.length || this.results.suggestions?.length ? html`
                 <div class="results-container">
                     ${this.renderSuggestions()}
@@ -377,6 +400,35 @@ export class ZbSearchModern extends SearchBase {
       transform: scale(1.08);
     }
 
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px;
+        text-align: center;
+        color: var(--secondary-text);
+        width: 100%;
+        flex: 1;
+    }
+    
+    .empty-icon {
+        margin-bottom: 16px;
+        color: #ddd;
+    }
+    
+    .empty-text {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--primary-text);
+        margin-bottom: 8px;
+    }
+    
+    .empty-subtext {
+        font-size: 14px;
+        color: var(--secondary-text);
+    }
+
     .product-info {
       padding: 16px;
     }
@@ -444,7 +496,7 @@ export class ZbSearchModern extends SearchBase {
        }
 
        .sidebar {
-           width: 100%;
+          //  width: 100%;
            border-right: none;
            border-bottom: 1px solid var(--border-color);
            padding: 20px 16px;

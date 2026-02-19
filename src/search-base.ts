@@ -13,6 +13,9 @@ export class SearchBase extends LitElement {
   @property({ type: Number })
   debounceDelay = 300;
 
+  @property({ type: Number })
+  searchLimit = 10;
+
   @property({ type: Boolean, reflect: true })
   open = false;
 
@@ -46,22 +49,6 @@ export class SearchBase extends LitElement {
     }
   }`;
 
-  // override connectedCallback() {
-  //   super.connectedCallback();
-  //   window.addEventListener(
-  //     "zb-search-response",
-  //     this.handleSearchResponse.bind(this) as EventListener
-  //   );
-  // }
-
-  // override disconnectedCallback() {
-  //   super.disconnectedCallback();
-  //   window.removeEventListener(
-  //     "zb-search-response",
-  //     this.handleSearchResponse.bind(this) as EventListener
-  //   );
-  // }
-
   protected handleInput(e: Event) {
     const input = e.target as HTMLInputElement;
     this.searchQuery = input.value;
@@ -76,7 +63,6 @@ export class SearchBase extends LitElement {
         this.performSearch();
       }, this.debounceDelay);
     } else {
-      // this.open = false;
       this.results = {} as SearchSuggestionData;
     }
   }
@@ -86,7 +72,7 @@ export class SearchBase extends LitElement {
     this.loading = true;
     if (this.core) {
       const storeId = this.core?.store.getStoreId();
-      const variables = { input: { params: { storeId }, query: { storeId, limit: 10, offset: 0, searchQuery: this.searchQuery } } };
+      const variables = { input: { params: { storeId }, query: { storeId, limit: this.searchLimit, offset: 0, searchQuery: this.searchQuery } } };
       this.core?.graphqlClient.executeQuery(this.query, variables).then((res: GetSearchSuggestionResponse) => {
         if (res && res.i1_getSearchSuggestion.data) {
           console.log('Search Response', res.i1_getSearchSuggestion.data);
@@ -103,13 +89,6 @@ export class SearchBase extends LitElement {
       });
       return;
     }
-    // this.dispatchEvent(
-    //   new CustomEvent("search-input", {
-    //     detail: { query: this.searchQuery },
-    //     bubbles: true,
-    //     composed: true,
-    //   })
-    // );
   }
 
   protected handleSearchResponse(e: CustomEvent) {
@@ -129,25 +108,15 @@ export class SearchBase extends LitElement {
 
   protected handleSubmit(e: Event) {
     e.preventDefault();
-    // this.dispatchEvent(
-    //   new CustomEvent("search-submit", {
-    //     detail: { query: this.searchQuery },
-    //     bubbles: true,
-    //     composed: true,
-    //   })
-    // );
+    if (this.searchQuery.trim()) {
+      this.handleSuggestionClick(this.searchQuery, `/products/all-products/0?searchText=${this.searchQuery}`);
+      this.handleClose();
+    }
   }
 
   protected handleClear() {
     this.searchQuery = "";
     this.results = {} as SearchSuggestionData;
-    // this.open = false;
-    // this.dispatchEvent(
-    //   new CustomEvent("search-clear", {
-    //     bubbles: true,
-    //     composed: true,
-    //   })
-    // );
     this.focusInput();
   }
 
@@ -156,38 +125,12 @@ export class SearchBase extends LitElement {
     this.results = {} as SearchSuggestionData;
     this.searchQuery = "";
     this.loading = false;
-    // this.dispatchEvent(
-    //   new CustomEvent("search-close", {
-    //     bubbles: true,
-    //     composed: true,
-    //   })
-    // );
   }
 
   protected handleSuggestionClick(suggestion: string, url?: string) {
     this.searchQuery = suggestion;
     this.open = false;
     this.core?.navigation.navigate(url!);
-    // this.dispatchEvent(
-    //   new CustomEvent("search-close", {
-    //     bubbles: true,
-    //     composed: true,
-    //   })
-    // );
-    // if (this.router && url) {
-    //   const cleanUrl = this.router.getUrlTree(url, this.activatedRoute!);
-    //   console.log('cleanUrl',cleanUrl);
-    //   this.router.navigate(cleanUrl);
-    //   return;
-    // }
-
-    // this.dispatchEvent(
-    //   new CustomEvent("suggestion-click", {
-    //     detail: { suggestion, type, url },
-    //     bubbles: true,
-    //     composed: true,
-    //   })
-    // );
   }
 
   protected focusInput() {
