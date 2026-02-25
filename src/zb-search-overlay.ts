@@ -2,8 +2,8 @@ import { css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { SearchBase } from "./search-base";
 
-@customElement("zb-search-autocomplete")
-export class ZbSearchAutocomplete extends SearchBase {
+@customElement("zb-search-overlay")
+export class ZbSearchOverlay extends SearchBase {
   /**
    * @property isStudio - If true, the search will not open.
    */
@@ -107,6 +107,18 @@ export class ZbSearchAutocomplete extends SearchBase {
   }
 
   /**
+   * Toggle search
+   */
+  private toggleSearch() {
+    this.open = !this.open;
+    if (this.open) {
+      setTimeout(() => this.focusInput(), 100);
+    }
+    this.results = {} as any;
+    this.searchQuery = "";
+  }
+
+  /**
    * Render empty state
    */
   private renderEmpty() {
@@ -127,7 +139,7 @@ export class ZbSearchAutocomplete extends SearchBase {
   render() {
     if (!this.open) {
         return html`
-            <div style="pointer-events: ${this.isStudio ? 'none' : 'auto'}" class="launcher" @click=${() => {this.open = true}}>
+            <div style="pointer-events: ${this.isStudio ? 'none' : 'auto'}" class="launcher" @click=${() => {this.toggleSearch()}}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -595,6 +607,6 @@ export class ZbSearchAutocomplete extends SearchBase {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "zb-search-autocomplete": ZbSearchAutocomplete;
+    "zb-search-overlay": ZbSearchOverlay;
   }
 }

@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ZenBasket Search Autocomplete - Demo</title>
   <link rel="stylesheet" href="./src/index.css" />
-  <script type="module" src="/src/zb-search-modern.ts"></script>
-  <script type="module" src="/src/zb-search-autocomplete.ts"></script>
-  <script type="module" src="/src/zb-classic-search.ts"></script>
+  <script type="module" src="/src/zb-search-panel.ts"></script>
+  <script type="module" src="/src/zb-search-overlay.ts"></script>
+  <script type="module" src="/src/zb-search-inline.ts"></script>
   <style>
     .demo-container {
       max-width: 800px;
@@ -105,23 +105,23 @@
     </div>
 
     <div class="demo-section">
-      <h2>Modern Search Autocomplete</h2>
-      <zb-search-modern id="search-modern" placeholder="Search products, pages..."></zb-search-modern>
+      <h2>Panel Search</h2>
+      <zb-search-panel id="search-panel" placeholder="Search products, pages..."></zb-search-panel>
     </div>
 
     <div class="demo-section">
-      <h2>Search Autocomplete</h2>
-      <zb-search-autocomplete id="search-autocomplete" placeholder="Search products, pages..."></zb-search-autocomplete>
+      <h2>Overlay Search</h2>
+      <zb-search-overlay id="search-overlay" placeholder="Search products, pages..."></zb-search-overlay>
     </div>
 
     <div class="demo-section">
-      <h2>Classic Search (Default)</h2>
-      <zb-classic-search id="classic-search" placeholder="Search products..."></zb-classic-search>
+      <h2>Inline Search (Default)</h2>
+      <zb-search-inline id="search-inline" placeholder="Search products..."></zb-search-inline>
     </div>
 
     <div class="demo-section">
-      <h2>Classic Search (List Only)</h2>
-      <zb-classic-search id="classic-search-list" placeholder="Search products..." dropdown-style="list-only"></zb-classic-search>
+      <h2>Inline Search (List Only)</h2>
+      <zb-search-inline id="search-inline-list" placeholder="Search products..." dropdown-style="list-only"></zb-search-inline>
     </div>
     
     <div class="demo-section">
@@ -158,7 +158,7 @@
       }
     }
 
-    const componentIds = ['search-modern', 'search-autocomplete', 'classic-search', 'classic-search-list'];
+    const componentIds = ['search-panel', 'search-overlay', 'search-inline', 'search-inline-list'];
 
     componentIds.forEach(id => {
         const el = document.getElementById(id);
@@ -182,7 +182,7 @@
                     ]
                 };
                 
-                // For zb-classic-search we might need to set results directly if it doesn't support the event yet in the demo logic, 
+                // For zb-search-inline we might need to set results directly if it doesn't support the event yet in the demo logic, 
                 // but let's try dispatching the response event which is the standard way.
                 const responseEvent = new CustomEvent('zb-search-response', {
                     detail: mockData,

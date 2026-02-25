@@ -2,12 +2,12 @@ import { css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { SearchBase } from "./search-base";
 
-@customElement("zb-classic-search")
-export class ZbClassicSearch extends SearchBase {
+@customElement("zb-search-inline")
+export class ZbSearchInline extends SearchBase {
   /**
    * @property dropdownStyle - The style of the dropdown.
    */
-  @property({ type: String, attribute: 'dropdown-style' })
+  @property({ type: String })
   dropdownStyle = 'default';
 
   /**
@@ -596,6 +596,6 @@ export class ZbClassicSearch extends SearchBase {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "zb-classic-search": ZbClassicSearch;
+    "zb-search-inline": ZbSearchInline;
   }
 }

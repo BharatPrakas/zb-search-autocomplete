@@ -7,9 +7,9 @@ export default defineConfig({
     emptyOutDir: false,
     lib: {
       entry: {
-        'zb-search-autocomplete': 'src/zb-search-autocomplete.ts',
-        'zb-search-modern': 'src/zb-search-modern.ts',
-        'zb-classic-search': 'src/zb-classic-search.ts',
+        'zb-search-overlay': 'src/zb-search-overlay.ts',
+        'zb-search-panel': 'src/zb-search-panel.ts',
+        'zb-search-inline': 'src/zb-search-inline.ts',
       },
       formats: ['es'],
     },

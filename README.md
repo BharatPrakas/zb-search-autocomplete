@@ -1,4 +1,4 @@
-# ZenBasket Search Autocomplete Web Component
+# ZenBasket Search Web Components
 
 A reusable, framework-agnostic search autocomplete web component built with Lit. This component can be easily integrated into any web application, including Angular, React, Vue, or vanilla JavaScript.
 
@@ -39,13 +39,13 @@ This will generate a compiled JavaScript file in the `dist` folder that you can 
 <!DOCTYPE html>
 <html>
 <head>
-  <script type="module" src="path/to/zb-search-autocomplete.js"></script>
+  <script type="module" src="path/to/zb-search-overlay.js"></script>
 </head>
 <body>
-  <zb-search-autocomplete 
+  <zb-search-overlay 
     placeholder="Search products..."
     api-endpoint="/api/search"
-  ></zb-search-autocomplete>
+  ></zb-search-overlay>
 </body>
 </html>
 ```
@@ -79,7 +79,7 @@ Add the compiled script to your `angular.json`:
         "build": {
           "options": {
             "scripts": [
-              "node_modules/zb-search-autocomplete/dist/zb-search-autocomplete.js"
+              "node_modules/zb-search-components/dist/zb-search-overlay.js"
             ]
           }
         }
@@ -92,14 +92,14 @@ Add the compiled script to your `angular.json`:
 Or include it in your `index.html`:
 
 ```html
-<script type="module" src="assets/zb-search-autocomplete.js"></script>
+<script type="module" src="assets/zb-search-overlay.js"></script>
 ```
 
 #### 3. Use in Component Template
 
 ```html
 <!-- header.component.html -->
-<zb-search-autocomplete
+<zb-search-overlay
   #searchComponent
   placeholder="Search products..."
   [attr.debounce-delay]="300"
@@ -107,7 +107,7 @@ Or include it in your `index.html`:
   (search-submit)="onSearchSubmit($event)"
   (suggestion-click)="onSuggestionClick($event)"
   (search-close)="onSearchClose($event)"
-></zb-search-autocomplete>
+></zb-search-overlay>
 ```
 
 #### 4. Handle Events in Component
@@ -278,7 +278,7 @@ All fields are optional. The component will only display sections that have data
 Manually set search results. Useful when you want to handle the API call yourself.
 
 ```javascript
-const searchComponent = document.querySelector('zb-search-autocomplete');
+const searchComponent = document.querySelector('zb-search-overlay');
 searchComponent.setResults({
   suggestions: ['apple', 'apricot'],
   products: [{ name: 'Apple iPhone', url: '/products/iphone' }],
@@ -301,7 +301,7 @@ searchComponent.setResults({
 The component uses Shadow DOM, so styles are encapsulated. You can customize the appearance using CSS custom properties:
 
 ```css
-zb-search-autocomplete {
+zb-search-overlay {
   --primary-color: #0066cc;
   --border-color: #e0e0e0;
   --hover-bg: #f5f5f5;
@@ -335,13 +335,13 @@ When a user clicks the search icon in your storefront:
 
 <div class="search-modal" [class.open]="searchOpen">
   <div class="search-modal-content">
-    <zb-search-autocomplete
+    <zb-search-overlay
       #searchComponent
       placeholder="Search products, pages..."
       (search-input)="onSearchInput($event)"
       (search-submit)="onSearchSubmit($event)"
       (search-close)="closeSearch()"
-    ></zb-search-autocomplete>
+    ></zb-search-overlay>
   </div>
 </div>
 ```
