@@ -1,9 +1,14 @@
 import { css, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { SearchBase } from "./search-base";
 
 @customElement("zb-search-autocomplete")
 export class ZbSearchAutocomplete extends SearchBase {
+  /**
+   * @property isStudio - If true, the search will not open.
+   */
+  @property({ type: Boolean, attribute: 'data-is-studio' })
+  isStudio = false;
   
   /** 
    * Highlight parts of text that match/don't match query.
@@ -116,10 +121,13 @@ export class ZbSearchAutocomplete extends SearchBase {
     `;
   }
 
+  /**
+   * Render search
+   */
   render() {
     if (!this.open) {
         return html`
-            <div class="launcher" @click=${() => this.open = true}>
+            <div style="pointer-events: ${this.isStudio ? 'none' : 'auto'}" class="launcher" @click=${() => {this.open = true}}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -217,6 +225,9 @@ export class ZbSearchAutocomplete extends SearchBase {
     `;
   }
 
+  /**
+   * Update search
+   */
   updated() {
     if(this.open) this.focusInput();
   }

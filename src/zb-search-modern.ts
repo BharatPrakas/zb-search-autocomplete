@@ -1,10 +1,18 @@
 import { css, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { SearchBase } from "./search-base";
 
 @customElement("zb-search-modern")
 export class ZbSearchModern extends SearchBase {
+  /**
+   * @property isStudio - If true, the search will not open.
+   */
+  @property({ type: Boolean, attribute: 'data-is-studio' })
+  isStudio = false;
 
+  /**
+   * Highlight match
+   */
   private highlightMatch(text: string, query: string) {
     if (!query) return html`${text}`;
     const lowerText = text.toLowerCase();
@@ -17,8 +25,9 @@ export class ZbSearchModern extends SearchBase {
     return html`<span>${before}</span><span class="highlight-bold">${matchStr}</span><span>${after}</span>`;
   }
 
-
-
+  /**
+   * Render suggestions
+   */
   private renderSuggestions() {
     // Left column content
     const hasSuggestions = this.results.suggestions?.length;
@@ -47,6 +56,9 @@ export class ZbSearchModern extends SearchBase {
     `;
   }
 
+  /**
+   * Render products
+   */
   private renderProducts() {
     if (!this.results.products?.length) return null;
 
@@ -72,6 +84,9 @@ export class ZbSearchModern extends SearchBase {
     `;
   }
 
+  /**
+   * Render empty
+   */
   private renderEmpty() {
     if (this.loading || !this.searchQuery || this.results.suggestions?.length || this.results.products?.length) {
       return null;
@@ -92,10 +107,13 @@ export class ZbSearchModern extends SearchBase {
     `;
   }
 
+  /**
+   * Render search
+   */
   render() {
     if (!this.open) {
         return html`
-            <div class="launcher" @click=${() => {this.open = true}}>
+            <div style="pointer-events: ${this.isStudio ? 'none' : 'auto'}" class="launcher" @click=${() => { this.open = true}}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -148,6 +166,9 @@ export class ZbSearchModern extends SearchBase {
     `;
   }
 
+  /**
+   * Update search
+   */
   updated() {
     if(this.open) this.focusInput();
   }

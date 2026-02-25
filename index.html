@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="./src/index.css" />
   <script type="module" src="/src/zb-search-modern.ts"></script>
   <script type="module" src="/src/zb-search-autocomplete.ts"></script>
+  <script type="module" src="/src/zb-classic-search.ts"></script>
   <style>
     .demo-container {
       max-width: 800px;
@@ -94,222 +95,115 @@
     }
   </style>
 </head>
+
 <body style="background-color: #f5f5f5;">
-    <div class="demo-container">
-      <div class="demo-header">
-        <h1>🔍 ZenBasket Search Autocomplete</h1>
-        <p>A reusable web component for product search with autocomplete</p>
-      </div>
 
-      <div class="demo-section">
-        <h2>Modern Search Autocomplete</h2>
-        <zb-search-modern id="searchDemo" placeholder="Search products, pages..."></zb-search-modern>
-        <div id="eventLog" class="event-log">
-          <div style="color: #999; font-style: italic;">Events will appear here...</div>
-        </div>
-      </div>
-
-          <div class="demo-section">
-        <h2>Search Autocomplete</h2>
-        <zb-search-autocomplete id="searchDemo" placeholder="Search products, pages..."></zb-search-autocomplete>
-        <div id="eventLog" class="event-log">
-          <div style="color: #999; font-style: italic;">Events will appear here...</div>
-        </div>
-      </div>
-
-      <!-- <div class="demo-section">
-        <h2>Event Log</h2>
-        <div id="eventLog" class="event-log">
-          <div style="color: #999; font-style: italic;">Events will appear here...</div>
-        </div>
-      </div>
-
-      <div class="demo-section">
-        <h2>Integration Example (Angular)</h2>
-        <div class="code-block">
-          <pre>&lt;!-- In your Angular template --&gt;
-&lt;zb-search-autocomplete
-  #searchComponent
-  placeholder="Search products..."
-  (search-input)="onSearchInput($event)"
-  (search-submit)="onSearchSubmit($event)"
-  (suggestion-click)="onSuggestionClick($event)"
-&gt;&lt;/zb-search-autocomplete&gt;
-
-&lt;!-- In your component.ts --&gt;
-import { Component, ViewChild, ElementRef } from '@angular/core';
-
-@Component({
-  selector: 'app-header',
-  templateUrl: './header.component.html'
-})
-export class HeaderComponent {
-  @ViewChild('searchComponent') searchComponent!: ElementRef;
-
-  onSearchInput(event: CustomEvent) {
-    const query = event.detail.query;
-    // Fetch search results from your API
-    this.searchService.search(query).subscribe(results => {
-      // Set results to the component
-      this.searchComponent.nativeElement.setResults(results);
-    });
-  }
-
-  onSearchSubmit(event: CustomEvent) {
-    const query = event.detail.query;
-    // Navigate to search results page
-    this.router.navigate(['/search'], { queryParams: { q: query } });
-  }
-
-  onSuggestionClick(event: CustomEvent) {
-    const { suggestion, type } = event.detail;
-    console.log('Clicked:', suggestion, 'Type:', type);
-  }
-}</pre>
-        </div>
-      </div>
-
-      <div class="demo-section">
-        <h2>API Response Format</h2>
-        <div class="code-block">
-          <pre>{
-  "suggestions": ["as st", "as sorted", "as h blonde"],
-  "products": [
-    {
-      "name": "Ash Trays",
-      "image": "https://example.com/ash-trays.jpg",
-      "url": "/products/ash-trays"
-    },
-    {
-      "name": "TOWEL STAND",
-      "url": "/products/towel-stand"
-    }
-  ],
-  "pages": [
-    {
-      "name": "Pharmacy",
-      "url": "/pages/pharmacy"
-    },
-    {
-      "name": "Personal Care Electronics",
-      "url": "/pages/personal-care-electronics"
-    }
-  ]
-}</pre>
-        </div>
-      </div> -->
+  <div class="demo-container">
+    <div class="demo-header">
+      <h1>🔍 ZenBasket Search Autocomplete</h1>
+      <p>A reusable web component for product search with autocomplete</p>
     </div>
 
-    <script>
-      // Demo script to simulate search functionality
-      const searchComponent = document.getElementById('searchDemo');
-      const eventLog = document.getElementById('eventLog');
+    <div class="demo-section">
+      <h2>Modern Search Autocomplete</h2>
+      <zb-search-modern id="search-modern" placeholder="Search products, pages..."></zb-search-modern>
+    </div>
 
-      // Sample data
-      const sampleData = {
-        suggestions: [
-            { name: 'as st', url: '#' }, 
-            { name: 'as sorted', url: '#' }, 
-            { name: 'as h blonde', url: '#' }, 
-            { name: 'ash tray', url: '#' }, 
-            { name: 'ashwagandha', url: '#' }
-        ],
-        products: [
-          {
-            name: 'Ash Trays',
-            url: '/products/ash-trays',
-            price: '$12.00',
-            image: "https://placehold.co/100"
-          },
-          {
-            name: 'TOWEL STAND',
-            url: '/products/towel-stand',
-            price: '$25.50',
-            image: "https://placehold.co/100"
-          },
-          {
-            name: 'Ashwagandha Capsules',
-            url: '/products/ashwagandha',
-            price: '$18.99',
-            image: "https://placehold.co/100"
-          }
-        ],
-        collections: [
-            { name: 'New Arrivals', url: '/collections/new' },
-            { name: 'Best Sellers', url: '/collections/best' }
-        ],
-        pages: [
-          {
-            name: 'Pharmacy',
-            url: '/pages/pharmacy'
-          },
-          {
-            name: 'Personal Care Electronics',
-            url: '/pages/personal-care-electronics'
-          }
-        ]
-      };
+    <div class="demo-section">
+      <h2>Search Autocomplete</h2>
+      <zb-search-autocomplete id="search-autocomplete" placeholder="Search products, pages..."></zb-search-autocomplete>
+    </div>
 
-      function logEvent(eventName, detail) {
-        if (!eventLog) return; // Guard if eventLog not found
-        const time = new Date().toLocaleTimeString();
-        const logItem = document.createElement('div');
-        logItem.className = 'event-log-item';
-        logItem.innerHTML = `
+    <div class="demo-section">
+      <h2>Classic Search (Default)</h2>
+      <zb-classic-search id="classic-search" placeholder="Search products..."></zb-classic-search>
+    </div>
+
+    <div class="demo-section">
+      <h2>Classic Search (List Only)</h2>
+      <zb-classic-search id="classic-search-list" placeholder="Search products..." dropdown-style="list-only"></zb-classic-search>
+    </div>
+    
+    <div class="demo-section">
+        <h3>Events Log</h3>
+        <div id="eventLog" class="event-log">
+            <div style="color: #999; font-style: italic;">Events will appear here...</div>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    // Demo script to simulate search functionality
+    const eventLog = document.getElementById('eventLog');
+
+    function logEvent(source, eventName, detail) {
+      if (!eventLog) return;
+      const time = new Date().toLocaleTimeString();
+      const logItem = document.createElement('div');
+      logItem.className = 'event-log-item';
+      logItem.innerHTML = `
           <span class="event-time">${time}</span>
-          <span class="event-name">${eventName}</span>
+          <span class="event-name">[${source}] ${eventName}</span>
           <span class="event-detail">${JSON.stringify(detail)}</span>
         `;
-        
-        // Clear placeholder
-        if (eventLog.children.length === 1 && eventLog.children[0].style.fontStyle === 'italic') {
-          eventLog.innerHTML = '';
-        }
-        
-        eventLog.insertBefore(logItem, eventLog.firstChild);
-        
-        // Keep only last 10 events
-        while (eventLog.children.length > 10) {
-          eventLog.removeChild(eventLog.lastChild);
-        }
+
+      if (eventLog.children.length === 1 && eventLog.children[0].style.fontStyle === 'italic') {
+        eventLog.innerHTML = '';
       }
 
-      // Listen to search events
-      searchComponent.addEventListener('search-input', (e) => {
-        logEvent('search-input', e.detail);
+      eventLog.insertBefore(logItem, eventLog.firstChild);
+
+      while (eventLog.children.length > 20) {
+        eventLog.removeChild(eventLog.lastChild);
+      }
+    }
+
+    const componentIds = ['search-modern', 'search-autocomplete', 'classic-search', 'classic-search-list'];
+
+    componentIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.addEventListener('search-input', (e) => {
+            logEvent(id, 'search-input', e.detail);
+
+            // Simulate API call
+            setTimeout(() => {
+                const query = e.detail.query.toLowerCase();
+                const mockData = {
+                    suggestions: [
+                        { name: `${query} in Electronics`, url: '/category/electronics' },
+                        { name: `${query} shoes`, url: '/category/shoes' },
+                        { name: `Best ${query}`, url: '/search?q=best+' + query }
+                    ],
+                    products: [
+                        { name: `Premium ${query}`, url: '/product/1', image: 'https://placehold.co/100x100?text=Product' },
+                        { name: `${query} Pro`, url: '/product/2', image: 'https://placehold.co/100x100?text=Pro' }
+                    ]
+                };
+                
+                // For zb-classic-search we might need to set results directly if it doesn't support the event yet in the demo logic, 
+                // but let's try dispatching the response event which is the standard way.
+                const responseEvent = new CustomEvent('zb-search-response', {
+                    detail: mockData,
+                    bubbles: true,
+                    composed: true
+                });
+                el.dispatchEvent(responseEvent);
+                
+                // Fallback for older components if they have setResults method
+                if (typeof el.setResults === 'function') {
+                    el.setResults(mockData);
+                }
+            }, 500);
+        });
         
-        // Simulate API call with delay
-        setTimeout(() => {
-          const query = e.detail.query.toLowerCase();
-          
-          // Filter sample data based on query
-          const filteredResults = {
-            suggestions: sampleData.suggestions.filter(s => s.name.toLowerCase().includes(query)),
-            products: sampleData.products.filter(p => p.name.toLowerCase().includes(query)),
-            collections: sampleData.collections,
-            pages: sampleData.pages.filter(p => p.name.toLowerCase().includes(query))
-          };
-          
-          searchComponent.setResults(filteredResults);
-        }, 300);
-      });
-
-      searchComponent.addEventListener('search-submit', (e) => {
-        logEvent('search-submit', e.detail);
-      });
-
-      searchComponent.addEventListener('search-clear', (e) => {
-        logEvent('search-clear', {});
-      });
-
-      searchComponent.addEventListener('search-close', (e) => {
-        logEvent('search-close', {});
-      });
-
-      searchComponent.addEventListener('suggestion-click', (e) => {
-        logEvent('suggestion-click', e.detail);
-      });
-    </script>
+        el.addEventListener('search-selection', (e) => logEvent(id, 'search-selection', e.detail));
+        el.addEventListener('search-submit', (e) => logEvent(id, 'search-submit', e.detail));
+        el.addEventListener('search-clear', () => logEvent(id, 'search-clear', {}));
+        el.addEventListener('search-close', () => logEvent(id, 'search-close', {}));
+    });
+  </script>
 
 
 
