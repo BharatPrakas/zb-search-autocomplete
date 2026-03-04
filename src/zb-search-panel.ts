@@ -66,13 +66,13 @@ export class ZbSearchPanel extends SearchBase {
       <div class="main-content">
         <div class="section-header">
             <span class="section-title">Products</span>
-            <a href="${this.results.view_all_url || '#'}" class="view-all-link">View all products</a>
+            <a @click=${() => this.handleSuggestionClick(this.searchQuery, this.results.view_all_url)} class="view-all-link">View all products</a>
         </div>
         <div class="products-grid">
             ${this.results.products.slice(0, 8).map(product => html`
                 <div class="product-card" @click=${() => this.handleSuggestionClick(product.name, product.url)}>
                     <div class="image-container">
-                        ${product.image ? html`<img src="${product.image}" alt="${product.name}">` : html`<div class="placeholder-image"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`}
+                        ${product.image ? html`<img src="${product.image}" alt="${product.name}" @error=${this.handleImageError}>` : html`<div class="placeholder-image"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>`}
                     </div>
                     <div class="product-info">
                         <div class="product-name">${product.name}</div>
@@ -90,6 +90,7 @@ export class ZbSearchPanel extends SearchBase {
   private toggleSearch() {
     this.open = !this.open;
     if (this.open) {
+      document.body.style.overflow = "hidden";
       setTimeout(() => this.focusInput(), 100);
     }
     this.results = {} as any;
@@ -100,7 +101,7 @@ export class ZbSearchPanel extends SearchBase {
    * Render empty
    */
   private renderEmpty() {
-    if (this.loading || !this.searchQuery || this.results.suggestions?.length || this.results.products?.length) {
+    if (this.loading || !this.searchQuery || this.results.suggestions?.length || this.results.products?.length || this.searchQuery.trim().length < this.minSearchLength) {
       return null;
     }
 
@@ -188,15 +189,16 @@ export class ZbSearchPanel extends SearchBase {
   static styles = css`
     :host {
       font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      --primary-text: #1a1a1a;
-      --secondary-text: #666666;
-      --border-color: #f0f0f0;
-      --accent-color: #000;
-      --modal-bg: #ffffff;
-      --input-bg: #f5f5f5;
-      --hover-bg: #f9f9f9;
-      --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      --card-hover-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      --zb-search-accent: #000;
+      --zb-search-text: #1a1a1a;
+      --zb-search-text-muted: #666666;
+      --zb-search-bg: #ffffff;
+      --zb-search-bg-input: #f5f5f5;
+      --zb-search-bg-hover: #f9f9f9;
+      --zb-search-border: #f0f0f0;
+      --zb-search-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --zb-search-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+      --zb-search-icon: #000;
     }
 
     .launcher {
@@ -206,7 +208,7 @@ export class ZbSearchPanel extends SearchBase {
         justify-content: center;
         width: 40px;
         height: 40px;
-        color: var(--primary-text);
+        color: var(--zb-search-icon);
         transition: transform 0.2s;
     }
 
@@ -217,7 +219,7 @@ export class ZbSearchPanel extends SearchBase {
     .search-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: var(--modal-bg);
+      background: var(--zb-search-bg);
       z-index: 10000;
       display: flex;
       flex-direction: column;
@@ -236,20 +238,20 @@ export class ZbSearchPanel extends SearchBase {
       width: 100%;
       max-width: 1400px;
       margin: 0 auto;
-      background: var(--modal-bg);
+      background: var(--zb-search-bg);
     }
 
     .search-header {
       display: flex;
       align-items: center;
       padding: 16px 24px;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--zb-search-border);
       flex-shrink: 0;
       background: #fff;
     }
 
     .search-icon {
-      color: var(--secondary-text);
+      color: var(--zb-search-text-muted);
       margin-right: 16px;
       display: flex;
       align-items: center;
@@ -260,7 +262,7 @@ export class ZbSearchPanel extends SearchBase {
       border: none;
       font-size: 18px;
       outline: none;
-      color: var(--primary-text);
+      color: var(--zb-search-text);
       background: transparent;
       padding: 8px 0;
       font-weight: 500;
@@ -281,7 +283,7 @@ export class ZbSearchPanel extends SearchBase {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--primary-text);
+      color: var(--zb-search-text);
       transition: all 0.2s;
     }
 
@@ -301,7 +303,7 @@ export class ZbSearchPanel extends SearchBase {
     .sidebar {
       width: 300px;
       flex-shrink: 0;
-      border-right: 1px solid var(--border-color);
+      border-right: 1px solid var(--zb-search-border);
       padding: 32px 24px;
       background: #ffffff;
     }
@@ -327,7 +329,7 @@ export class ZbSearchPanel extends SearchBase {
 
     .sidebar-item {
       padding: 10px 12px;
-      color: var(--primary-text);
+      color: var(--zb-search-text);
       cursor: pointer;
       font-size: 15px;
       transition: all 0.2s;
@@ -337,8 +339,8 @@ export class ZbSearchPanel extends SearchBase {
     }
     
     .sidebar-item:hover {
-      background: var(--hover-bg);
-      color: var(--accent-color);
+      background: var(--zb-search-bg-hover);
+      color: var(--zb-search-accent);
       padding-left: 16px;
     }
 
@@ -349,7 +351,7 @@ export class ZbSearchPanel extends SearchBase {
     
     .highlight-bold {
       font-weight: 700;
-      color: var(--primary-text);
+      color: var(--zb-search-text);
     }
 
     /* RIGHT CONTENT */
@@ -369,12 +371,12 @@ export class ZbSearchPanel extends SearchBase {
     .section-title {
       font-weight: 600;
       font-size: 18px;
-      color: var(--primary-text);
+      color: var(--zb-search-text);
     }
 
     .view-all-link {
       font-size: 14px;
-      color: var(--primary-text);
+      color: var(--zb-search-text);
       text-decoration: none;
       cursor: pointer;
       font-weight: 500;
@@ -410,7 +412,7 @@ export class ZbSearchPanel extends SearchBase {
 
     .product-card:hover {
       transform: translateY(-4px);
-      box-shadow: var(--card-hover-shadow);
+      box-shadow: var(--zb-search-shadow-hover);
       border-color: rgba(0,0,0,0.05);
     }
 
@@ -440,7 +442,7 @@ export class ZbSearchPanel extends SearchBase {
         justify-content: center;
         padding: 48px;
         text-align: center;
-        color: var(--secondary-text);
+        color: var(--zb-search-text-muted);
         width: 100%;
         flex: 1;
     }
@@ -453,13 +455,13 @@ export class ZbSearchPanel extends SearchBase {
     .empty-text {
         font-size: 16px;
         font-weight: 500;
-        color: var(--primary-text);
+        color: var(--zb-search-text);
         margin-bottom: 8px;
     }
     
     .empty-subtext {
         font-size: 14px;
-        color: var(--secondary-text);
+        color: var(--zb-search-text-muted);
     }
 
     .product-info {
@@ -469,7 +471,7 @@ export class ZbSearchPanel extends SearchBase {
     .product-name {
       font-size: 14px;
       font-weight: 500;
-      color: var(--primary-text);
+      color: var(--zb-search-text);
       line-height: 1.5;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -490,7 +492,7 @@ export class ZbSearchPanel extends SearchBase {
     .loading {
       padding: 40px;
       text-align: center;
-      color: var(--secondary-text);
+      color: var(--zb-search-text-muted);
       font-size: 16px;
       display: flex;
       align-items: center;
@@ -535,7 +537,7 @@ export class ZbSearchPanel extends SearchBase {
        .sidebar {
           //  width: 100%;
            border-right: none;
-           border-bottom: 1px solid var(--border-color);
+           border-bottom: 1px solid var(--zb-search-border);
            padding: 20px 16px;
        }
 

@@ -28,6 +28,12 @@ export class SearchBase extends LitElement {
   searchLimit = 10;
 
   /**
+   * Minimum search length
+   */
+  @property({ type: Number })
+  minSearchLength = 3;
+
+  /**
    * Open state
    */
   @property({ type: Boolean, reflect: true })
@@ -104,7 +110,7 @@ export class SearchBase extends LitElement {
       clearTimeout(this.debounceTimer);
     }
 
-    if (this.searchQuery.trim()) {
+    if (this.searchQuery.trim().length >= this.minSearchLength) {
       this.open = true;
       // Set loading to true immediately to show loader during debounce
       this.loading = true;
@@ -121,7 +127,7 @@ export class SearchBase extends LitElement {
    * Perform search
    */
   protected performSearch() {
-    if (!this.searchQuery.trim()) return;
+    if (this.searchQuery.trim().length < this.minSearchLength) return;
     this.loading = true;
     if (this.core) {
       const storeId = this.core?.store.getStoreId();
@@ -187,13 +193,18 @@ export class SearchBase extends LitElement {
   /**
    * Handle close
    */
-  protected handleClose(isKeepSearchQuery = false) {
+  protected handleClose(isKeepSearchQuery = false, isKeepResults = false) {
     this.open = false;
-    this.results = {} as SearchSuggestionData;
+    if (!isKeepResults) {
+      this.results = {} as SearchSuggestionData;
+    }
     if (!isKeepSearchQuery) {
       this.searchQuery = "";
     }
     this.loading = false;
+    if (document.body.style.overflow === "hidden") {
+      document.body.style.overflow = "auto";
+    }
   }
 
   /**
@@ -205,6 +216,9 @@ export class SearchBase extends LitElement {
     // Flag: skip the next URL change so the polling doesn't clear the search query
     this._skipNextUrlChange = true;
     this.core?.navigation.navigate(url!);
+    if (document.body.style.overflow === "hidden") {
+      document.body.style.overflow = "auto";
+    }
   }
 
   /**
@@ -224,7 +238,21 @@ export class SearchBase extends LitElement {
   this.results = {} as SearchSuggestionData;
   this.open = false;
   this.loading = false;
+  if (document.body.style.overflow === "hidden") {
+    document.body.style.overflow = "auto";
+  }
 };
+
+/**
+ * Handle image error
+ */
+handleImageError(e:Event) {
+  const img = e.target as HTMLImageElement;
+  if (!img.dataset.fallback) {
+    img.dataset.fallback = 'true';
+    img.src = '/assets/image-not-found.jpg';
+  }
+}
 
 /**
  * Connected callback

@@ -16,6 +16,12 @@ export class ZbSearchInline extends SearchBase {
   @property({ type: Boolean, attribute: 'data-is-studio' })
   isStudio = false;
 
+  /**
+   * @property isBuilderMobile - If true, the search will not open.
+   */
+  @property({ type: Boolean, attribute: 'is-builder-mobile' })
+  isBuilderMobile = false;
+
   /** 
    * Highlight parts of text that match/don't match query.
    */
@@ -85,7 +91,7 @@ export class ZbSearchInline extends SearchBase {
             >
               ${
                 product.image
-                  ? html`<img src=${product.image} alt=${product.name} class="product-image" />`
+                  ? html`<img src=${product.image} @error=${this.handleImageError} alt=${product.name} class="product-image" />`
                   : null
               }
               <span class="product-name">
@@ -160,9 +166,9 @@ export class ZbSearchInline extends SearchBase {
       setTimeout(() => this.focusInput(), 100);
       this.results = {} as any;
       this.searchQuery = "";
+      document.body.style.overflow = "hidden";
     } else {
-      this.results = {} as any;
-      this.searchQuery = "";
+      document.body.style.overflow = "auto";
     }
   }
 
@@ -173,11 +179,11 @@ export class ZbSearchInline extends SearchBase {
     const isOpen = this.open;
 
     return html`
-      <div class="wrapper ${isOpen ? 'open' : ''}">
-        ${isOpen ? html`<div class="host-overlay" @click="${() => this.handleClose(true)}"></div>` : ''}
+      <div class="wrapper ${isOpen ? 'open' : ''} ${this.isBuilderMobile ? 'is-builder-mobile' : ''}">
+        ${isOpen ? html`<div class="host-overlay" @click="${() => this.handleClose(true, true)}"></div>` : ''}
         
         <!-- Mobile Trigger / Desktop Icon -->
-        <div class="search-trigger" @click="${this.isStudio ? '' : this.toggleSearch}">
+        <div class="search-trigger" @click="${(this.isStudio || this.isBuilderMobile) ? '' : this.toggleSearch}">
              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -220,7 +226,7 @@ export class ZbSearchInline extends SearchBase {
                 </div>
             </div>
             
-            ${isOpen && (this.results.suggestions?.length || this.results.products?.length || this.loading || (this.searchQuery && !this.loading)) ? 
+            ${isOpen && this.searchQuery.trim().length >= this.minSearchLength && (this.results.suggestions?.length || this.results.products?.length || this.loading || (this.searchQuery && !this.loading)) ? 
                 (this.dropdownStyle === 'list-only' ? 
                     this.renderListOnlyDropdown() : 
                     html`
@@ -242,14 +248,15 @@ export class ZbSearchInline extends SearchBase {
     :host {
       display: block;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      --primary-color: #000;
-      --border-color: #e0e0e0;
-      --bg-color: #fff;
-      --text-main: #333;
-      --text-sub: #666;
-      --hover-bg: #f5f5f5;
-      --focus-ring: rgba(0, 0, 0, 0.1);
-      --input-height: 48px;
+      --zb-search-accent: #000;
+      --zb-search-text: #333;
+      --zb-search-text-muted: #666;
+      --zb-search-bg: #fff;
+      --zb-search-bg-hover: #f5f5f5;
+      --zb-search-border: #e0e0e0;
+      --zb-search-focus-ring: rgba(0, 0, 0, 0.1);
+      --zb-search-icon: #000;
+      --zb-search-input-border-radius: 8px;
     }
 
     /* Modern Reset */
@@ -288,22 +295,22 @@ export class ZbSearchInline extends SearchBase {
         width: 40px;
         height: 40px;
         cursor: pointer;
-        color: var(--text-main);
+        color: var(--zb-search-icon);
     }
 
     .search-container {
         display: none; /* Hidden by default on mobile */
-        background: var(--bg-color);
+        background: var(--zb-search-bg);
         width: 100%;
         height: 100%;
         position: relative;
     }
     
     .dropdown {
-        background: var(--bg-color);
+        background: var(--zb-search-bg);
         max-height: 400px;
         overflow-y: auto;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid var(--zb-search-border);
         display: none;
     }
 
@@ -319,13 +326,13 @@ export class ZbSearchInline extends SearchBase {
     .list-item {
         padding: 10px 16px;
         font-size: 14px;
-        color: var(--text-main);
+        color: var(--zb-search-text);
         cursor: pointer;
         transition: background 0.1s;
     }
 
     .list-item:hover {
-        background-color: var(--hover-bg);
+        background-color: var(--zb-search-bg-hover);
     }
 
     /* Desktop Styles */
@@ -338,7 +345,15 @@ export class ZbSearchInline extends SearchBase {
             display: block; /* Always show input on desktop */
             z-index: 999; /* Above overlay */
             padding: 3px;
-            border-radius: 10px;
+            border-radius: calc(var(--zb-search-input-border-radius) + 3px);
+        }
+
+        .wrapper.is-builder-mobile .search-container {
+            display: none;
+        }
+
+        .wrapper.is-builder-mobile .search-trigger {
+            display: flex;
         }
 
         .search-header {
@@ -352,20 +367,20 @@ export class ZbSearchInline extends SearchBase {
             align-items: center;
             width: 100%;
             height: 100%;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border: 1px solid var(--zb-search-border);
+            border-radius: var(--zb-search-input-border-radius);
             padding: 0 12px;
             transition: all 0.2s ease-in;
-            background: var(--bg-color);
+            background: var(--zb-search-bg);
         }
 
         .input-wrapper:focus-within {
-            // border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px var(--focus-ring);
+            // border-color: var(--zb-search-accent);
+            box-shadow: 0 0 0 3px var(--zb-search-focus-ring);
         }
 
         .search-icon-input {
-            color: var(--text-sub);
+            color: var(--zb-search-text-muted);
             margin-right: 8px;
             display: flex;
         }
@@ -376,7 +391,7 @@ export class ZbSearchInline extends SearchBase {
             outline: none;
             font-size: 14px;
             background: transparent;
-            color: var(--text-main);
+            color: var(--zb-search-text);
             height: 100%;
             pointer-events: none;
         }
@@ -386,7 +401,7 @@ export class ZbSearchInline extends SearchBase {
             border: none;
             padding: 4px;
             cursor: pointer;
-            color: var(--text-sub);
+            color: var(--zb-search-text-muted);
             display: flex;
             align-items: center;
             opacity: 0.6;
@@ -407,7 +422,7 @@ export class ZbSearchInline extends SearchBase {
             left: 0;
             right: 0;
             margin-top: 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--zb-search-border);
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             z-index: 1000;
@@ -441,7 +456,7 @@ export class ZbSearchInline extends SearchBase {
             display: flex;
             align-items: center;
             padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--zb-search-border);
             gap: 12px;
         }
 
@@ -456,7 +471,7 @@ export class ZbSearchInline extends SearchBase {
         }
         
         .search-icon-input {
-            color: var(--text-sub);
+            color: var(--zb-search-text-muted);
             margin-right: 8px;
         }
 
@@ -466,7 +481,7 @@ export class ZbSearchInline extends SearchBase {
             outline: none;
             background: transparent;
             font-size: 12px;
-            color: var(--text-main);
+            color: var(--zb-search-text);
         }
 
         .clear-button {
@@ -486,7 +501,7 @@ export class ZbSearchInline extends SearchBase {
             background: none;
             border: none;
             font-size: 16px;
-            color: var(--text-main);
+            color: var(--zb-search-text);
             font-weight: 500;
             cursor: pointer;
             padding: 0;
@@ -503,12 +518,12 @@ export class ZbSearchInline extends SearchBase {
     .section-label {
         font-size: 11px;
         font-weight: 600;
-        color: var(--text-sub);
+        color: var(--zb-search-text-muted);
         letter-spacing: 0.5px;
         padding: 16px 16px 8px;
     }
     .suggestions-section {
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--zb-search-border);
     }
 
     .suggestion-item {
@@ -517,17 +532,17 @@ export class ZbSearchInline extends SearchBase {
         cursor: pointer;
         display: flex;
         align-items: center;
-        color: var(--text-main);
+        color: var(--zb-search-text);
         transition: background 0.1s;
     }
 
     .suggestion-item:hover {
-        background-color: var(--hover-bg);
+        background-color: var(--zb-search-bg-hover);
     }
 
     .highlight-bold {
         font-weight: 700;
-        color: var(--primary-color);
+        color: var(--zb-search-accent);
     }
 
     .products-section {
@@ -546,7 +561,7 @@ export class ZbSearchInline extends SearchBase {
     }
 
     .product-item:hover {
-        background-color: var(--hover-bg);
+        background-color: var(--zb-search-bg-hover);
     }
 
     .product-image {
@@ -559,7 +574,7 @@ export class ZbSearchInline extends SearchBase {
 
     .product-name {
         font-size: 14px;
-        color: var(--text-main);
+        color: var(--zb-search-text);
         line-height: 1.4;
     }
 
@@ -569,14 +584,14 @@ export class ZbSearchInline extends SearchBase {
         align-items: center;
         justify-content: center;
         gap: 12px;
-        color: var(--text-sub);
+        color: var(--zb-search-text-muted);
     }
 
     .loading-spinner {
         width: 18px;
         height: 18px;
-        border: 2px solid var(--border-color);
-        border-top-color: var(--primary-color);
+        border: 2px solid var(--zb-search-border);
+        border-top-color: var(--zb-search-accent);
         border-radius: 50%;
         animation: spin 0.6s linear infinite;
     }
@@ -588,7 +603,7 @@ export class ZbSearchInline extends SearchBase {
     .empty-state {
         padding: 24px;
         text-align: center;
-        color: var(--text-sub);
+        color: var(--zb-search-text-muted);
         font-size: 14px;
     }
   `;

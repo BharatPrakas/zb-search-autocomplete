@@ -79,7 +79,7 @@ export class ZbSearchOverlay extends SearchBase {
             >
               ${
                 product.image
-                  ? html`<img src=${product.image} alt=${product.name} class="product-image" />`
+                  ? html`<img src=${product.image} @error=${this.handleImageError} alt=${product.name} class="product-image" />`
                   : null
               }
               <span class="product-name">
@@ -112,6 +112,7 @@ export class ZbSearchOverlay extends SearchBase {
   private toggleSearch() {
     this.open = !this.open;
     if (this.open) {
+      document.body.style.overflow = "hidden";
       setTimeout(() => this.focusInput(), 100);
     }
     this.results = {} as any;
@@ -122,7 +123,7 @@ export class ZbSearchOverlay extends SearchBase {
    * Render empty state
    */
   private renderEmpty() {
-    if (this.loading || !this.searchQuery || this.results.suggestions?.length || this.results.products?.length) {
+    if (this.loading || !this.searchQuery || this.results.suggestions?.length || this.results.products?.length || this.searchQuery.trim().length < this.minSearchLength) {
       return null;
     }
 
@@ -202,7 +203,7 @@ export class ZbSearchOverlay extends SearchBase {
               </div>
             
               ${
-                this.searchQuery
+                this.searchQuery.trim().length >= this.minSearchLength
                   ? html`
                     <div class="dropdown">
                       ${this.renderLoading()} ${this.renderSuggestions()} ${this.renderProducts()}
@@ -249,13 +250,15 @@ export class ZbSearchOverlay extends SearchBase {
       display: block;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
         sans-serif;
-      --primary-color: #000;
-      --border-color: #e0e0e0;
-      --hover-bg: #f8f9fa;
-      --text-primary: #333;
-      --text-secondary: #666;
-      --text-tertiary: #999;
-      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --zb-search-accent: #000;
+      --zb-search-text: #333;
+      --zb-search-text-muted: #666;
+      --zb-search-text-subtle: #999;
+      --zb-search-bg: #fff;
+      --zb-search-bg-hover: #f8f9fa;
+      --zb-search-border: #e0e0e0;
+      --zb-search-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --zb-search-icon: #000;
     }
     
     .launcher {
@@ -265,7 +268,7 @@ export class ZbSearchOverlay extends SearchBase {
         justify-content: center;
         width: 40px;
         height: 40px;
-        color: var(--text-primary);
+        color: var(--zb-search-icon);
         transition: transform 0.2s;
     }
 
@@ -316,7 +319,7 @@ export class ZbSearchOverlay extends SearchBase {
       display: flex;
       align-items: center;
       background: white;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--zb-search-border);
       border-radius: 4px; /* Square with slight roundness */
       padding: 0 12px;
       height: 48px;
@@ -326,7 +329,7 @@ export class ZbSearchOverlay extends SearchBase {
     }
 
     .search-input-wrapper:focus-within {
-      border-color: var(--border-color);
+      border-color: var(--zb-search-border);
     }
 
     .input-content {
@@ -340,7 +343,7 @@ export class ZbSearchOverlay extends SearchBase {
 
     .search-label {
       font-size: 10px;
-      color: var(--text-tertiary);
+      color: var(--zb-search-text-subtle);
       font-weight: 500;
       margin-bottom: 0px;
       line-height: 1;
@@ -352,7 +355,7 @@ export class ZbSearchOverlay extends SearchBase {
       outline: none;
       padding: 0;
       font-size: 16px;
-      color: var(--text-primary);
+      color: var(--zb-search-text);
       background: transparent;
       line-height: 20px;
       height: 24px;
@@ -367,7 +370,7 @@ export class ZbSearchOverlay extends SearchBase {
     .search-icon {
       width: 20px;
       height: 20px;
-      color: var(--text-secondary);
+      color: var(--zb-search-text-muted);
       flex-shrink: 0;
       cursor: pointer;
     }
@@ -391,7 +394,7 @@ export class ZbSearchOverlay extends SearchBase {
     }
 
     .clear-button:hover {
-      color: var(--text-secondary);
+      color: var(--zb-search-text-muted);
     }
 
     /* Outer close button */
@@ -403,13 +406,13 @@ export class ZbSearchOverlay extends SearchBase {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-secondary);
+      color: var(--zb-search-text-muted);
       transition: color 0.2s ease;
       flex-shrink: 0;
     }
 
     .close-button:hover {
-      color: var(--primary-color);
+      color: var(--zb-search-accent);
     }
 
     .close-button svg {
@@ -423,11 +426,11 @@ export class ZbSearchOverlay extends SearchBase {
       left: 0;
       right: 0;
       background: white;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--zb-search-border);
       border-top: none; 
       margin-top: -1px;
       border-radius: 0 0 4px 4px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--zb-search-shadow);
       max-height: 400px;
       overflow-y: auto;
       z-index: 1000;
@@ -436,7 +439,7 @@ export class ZbSearchOverlay extends SearchBase {
     .section-label {
       font-size: 10px;
       font-weight: 700;
-      color: var(--text-tertiary);
+      color: var(--zb-search-text-subtle);
       letter-spacing: 1px;
       padding: 16px 16px 8px;
       text-transform: uppercase;
@@ -452,11 +455,11 @@ export class ZbSearchOverlay extends SearchBase {
       cursor: pointer;
       background-color: white;
       text-decoration: none;
-      color: var(--text-primary);
+      color: var(--zb-search-text);
     }
 
     .suggestion-item:hover {
-      background-color: var(--hover-bg);
+      background-color: var(--zb-search-bg-hover);
     }
 
     .suggestion-text {
@@ -471,7 +474,7 @@ export class ZbSearchOverlay extends SearchBase {
 
     .products-section {
       padding: 8px 0;
-      border-top: 1px solid var(--border-color);
+      border-top: 1px solid var(--zb-search-border);
     }
 
     .product-item {
@@ -481,11 +484,11 @@ export class ZbSearchOverlay extends SearchBase {
       gap: 12px;
       cursor: pointer;
       text-decoration: none;
-      color: var(--text-primary);
+      color: var(--zb-search-text);
     }
     
     .product-item:hover {
-        background-color: var(--hover-bg);
+        background-color: var(--zb-search-bg-hover);
     }
 
     .product-image {
@@ -507,14 +510,14 @@ export class ZbSearchOverlay extends SearchBase {
       justify-content: center;
       gap: 12px;
       padding: 24px;
-      color: var(--text-secondary);
+      color: var(--zb-search-text-muted);
     }
 
     .loading-spinner {
       width: 20px;
       height: 20px;
-      border: 2px solid var(--border-color);
-      border-top-color: var(--primary-color);
+      border: 2px solid var(--zb-search-border);
+      border-top-color: var(--zb-search-accent);
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
     }
@@ -528,7 +531,7 @@ export class ZbSearchOverlay extends SearchBase {
     .empty-state {
       padding: 24px;
       text-align: center;
-      color: var(--text-secondary);
+      color: var(--zb-search-text-muted);
       font-size: 14px;
     }
 
@@ -565,7 +568,7 @@ export class ZbSearchOverlay extends SearchBase {
         width: 100%;
         padding: 12px 10px;
         gap: 12px;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--zb-search-border);
         box-sizing: border-box;
       }
 
@@ -581,7 +584,7 @@ export class ZbSearchOverlay extends SearchBase {
       .search-input-wrapper {
         border-radius: 10px;
         background-color: white;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--zb-search-border);
       }
 
       .dropdown {
