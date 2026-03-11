@@ -127,7 +127,6 @@ export class SearchBase extends LitElement {
    * Perform search
    */
   protected performSearch() {
-    console.log("Performing search for:", this.searchQuery);
     if (this.searchQuery.trim().length < this.minSearchLength) return;
     this.loading = true;
     if (this.core) {
