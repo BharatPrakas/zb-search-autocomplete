@@ -1,6 +1,6 @@
 import { LitElement } from "lit";
 import { property, state } from "lit/decorators.js";
-import type { CoreAPI, GetSearchSuggestionResponse, SearchSuggestionData, SearchSuggestionProduct } from "./search-adapter.interface";
+import type { CoreAPI, GetSearchSuggestionResponse, SearchSuggestionData, SearchSuggestionProduct } from "../core-adapter.interface";
 
 export class SearchBase extends LitElement {
   /**

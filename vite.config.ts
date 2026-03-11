@@ -3,13 +3,14 @@ import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    outDir: 'E:/Centizen Projects/zenbasket/zenbasket/zb-app/apps/zb-storefront/public/plugins/zb-search',
+    // TODO: change the outDir to the correct path
+    // outDir: 'E:/Centizen Projects/zenbasket/zenbasket/zb-app/apps/zb-storefront/public/plugins',
     emptyOutDir: false,
     lib: {
       entry: {
-        'zb-search-overlay': 'src/zb-search-overlay.ts',
-        'zb-search-panel': 'src/zb-search-panel.ts',
-        'zb-search-inline': 'src/zb-search-inline.ts',
+        'zb-search/zb-search-overlay': 'src/zb-search/zb-search-overlay.ts',
+        'zb-search/zb-search-panel': 'src/zb-search/zb-search-panel.ts',
+        'zb-search/zb-search-inline': 'src/zb-search/zb-search-inline.ts',
       },
       formats: ['es'],
     },
@@ -19,7 +20,12 @@ export default defineConfig({
       output: {
         // Ensure proper module format
         format: 'es',
-        chunkFileNames: '[name].js',
+        chunkFileNames: (chunkInfo) => {
+          if (chunkInfo.moduleIds.some(id => id.includes('/src/zb-search/'))) {
+            return 'zb-search/[name].js';
+          }
+          return '[name].js';
+        },
       },
     },
   },
